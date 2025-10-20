@@ -62,6 +62,38 @@
         "allowed": "Warehouse Supervisor,Stock User",
         "doctype": "Workflow Transition"
       }
+    ],
+    "states": [
+      {
+        "doctype": "Workflow Document State",
+        "state": "Draft",
+        "doc_status": "0",
+        "allow_edit": "Warehouse Supervisor,Kitting Supervisor,Stock User"
+      },
+      {
+        "doctype": "Workflow Document State",
+        "state": "Pending Warehouse Approval",
+        "doc_status": "0",
+        "allow_edit": "Warehouse Supervisor"
+      },
+      {
+        "doctype": "Workflow Document State",
+        "state": "Warehouse Approved",
+        "doc_status": "0",
+        "allow_edit": "Kitting Supervisor"
+      },
+      {
+        "doctype": "Workflow Document State",
+        "state": "Kitting Approved",
+        "doc_status": "1",
+        "allow_edit": ""
+      },
+      {
+        "doctype": "Workflow Document State",
+        "state": "Rejected",
+        "doc_status": "0",
+        "allow_edit": "Warehouse Supervisor,Kitting Supervisor"
+      }
     ]
   }
 ]
