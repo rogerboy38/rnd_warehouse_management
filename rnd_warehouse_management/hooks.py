@@ -1,4 +1,4 @@
-from . import __version__ as app_version
+from .__version__ import __version__ as app_version
 
 app_name = "rnd_warehouse_management"
 app_title = "RND Warehouse Management"
@@ -8,7 +8,6 @@ app_icon = "fa fa-warehouse"
 app_color = "#3498db"
 app_email = "support@minimax.com"
 app_license = "MIT"
-app_version = "2.1.0"
 required_apps = ["frappe", "erpnext"]
 
 # Additional Features
