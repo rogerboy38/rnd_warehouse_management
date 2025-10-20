@@ -1,0 +1,248 @@
+[
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_sap_movement_type",
+		"label": "SAP Movement Type",
+		"fieldtype": "Link",
+		"options": "Movement Type Master",
+		"insert_after": "purpose",
+		"in_list_view": 1,
+		"in_standard_filter": 1,
+		"description": "SAP-style movement type for warehouse operations",
+		"reqd": 0
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_movement_type_description",
+		"label": "Movement Type Description",
+		"fieldtype": "Data",
+		"insert_after": "custom_sap_movement_type",
+		"read_only": 1,
+		"description": "Auto-populated from Movement Type Master"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_movement_category",
+		"label": "Movement Category",
+		"fieldtype": "Data",
+		"insert_after": "custom_movement_type_description",
+		"read_only": 1,
+		"in_list_view": 0,
+		"description": "Auto-populated from Movement Type Master"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_work_order_reference",
+		"label": "Work Order Reference",
+		"fieldtype": "Link",
+		"options": "Work Order",
+		"insert_after": "custom_sap_movement_type",
+		"in_list_view": 1,
+		"description": "Link to related Work Order for zone status tracking"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "section_break_zone_status",
+		"label": "Zone Status Information",
+		"fieldtype": "Section Break",
+		"insert_after": "custom_work_order_reference",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_zone_status",
+		"label": "Zone Status",
+		"fieldtype": "Select",
+		"options": "\nRed Zone\nGreen Zone",
+		"insert_after": "section_break_zone_status",
+		"in_list_view": 1,
+		"read_only": 1,
+		"description": "Red Zone = Incomplete materials, Green Zone = Complete materials"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_zone_status_color",
+		"label": "Zone Status Color",
+		"fieldtype": "Color",
+		"insert_after": "custom_zone_status",
+		"read_only": 1,
+		"hidden": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_material_completion_percentage",
+		"label": "Material Completion %",
+		"fieldtype": "Percent",
+		"insert_after": "custom_zone_status_color",
+		"read_only": 1,
+		"precision": 2
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "column_break_zone_info",
+		"fieldtype": "Column Break",
+		"insert_after": "custom_material_completion_percentage"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_gi_gt_slip_number",
+		"label": "GI/GT Slip Number",
+		"fieldtype": "Data",
+		"insert_after": "column_break_zone_info",
+		"read_only": 1,
+		"unique": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_gi_gt_slip_generated_on",
+		"label": "GI/GT Slip Generated On",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_gi_gt_slip_number",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "section_break_signatures",
+		"label": "Dual Signature Approval",
+		"fieldtype": "Section Break",
+		"insert_after": "custom_gi_gt_slip_generated_on",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_warehouse_supervisor_signature",
+		"label": "Warehouse Supervisor Signature",
+		"fieldtype": "Signature",
+		"insert_after": "section_break_signatures",
+		"description": "Required signature from Warehouse Supervisor"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_warehouse_supervisor_sign_date",
+		"label": "Warehouse Supervisor Sign Date",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_warehouse_supervisor_signature",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "column_break_kitting_signature",
+		"fieldtype": "Column Break",
+		"insert_after": "custom_warehouse_supervisor_sign_date"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_kitting_supervisor_signature",
+		"label": "Kitting Supervisor Signature",
+		"fieldtype": "Signature",
+		"insert_after": "column_break_kitting_signature",
+		"description": "Required signature from Kitting Supervisor (for SAP 311 movements)"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_kitting_supervisor_sign_date",
+		"label": "Kitting Supervisor Sign Date",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_kitting_supervisor_signature",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "section_break_approval_workflow",
+		"label": "Approval Workflow Status",
+		"fieldtype": "Section Break",
+		"insert_after": "custom_kitting_supervisor_sign_date",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_approval_status",
+		"label": "Approval Status",
+		"fieldtype": "Select",
+		"options": "\nDraft\nPending Level 1\nLevel 1 Approved\nPending Level 2\nLevel 2 Approved\nPending Level 3\nLevel 3 Approved\nPending Level 4\nLevel 4 Approved\nPending Level 5\nLevel 5 Approved\nFully Approved\nRejected",
+		"insert_after": "section_break_approval_workflow",
+		"in_list_view": 1,
+		"in_standard_filter": 1,
+		"read_only": 1,
+		"default": "Draft"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_current_approval_level",
+		"label": "Current Approval Level",
+		"fieldtype": "Int",
+		"insert_after": "custom_approval_status",
+		"read_only": 1,
+		"default": 0
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "column_break_approval_info",
+		"fieldtype": "Column Break",
+		"insert_after": "custom_current_approval_level"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_pending_approver",
+		"label": "Pending Approver",
+		"fieldtype": "Link",
+		"options": "User",
+		"insert_after": "column_break_approval_info",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_approval_requested_on",
+		"label": "Approval Requested On",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_pending_approver",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "section_break_approval_comments",
+		"fieldtype": "Section Break",
+		"insert_after": "custom_approval_requested_on"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_approval_comments",
+		"label": "Approval Comments",
+		"fieldtype": "Text Editor",
+		"insert_after": "section_break_approval_comments"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Stock Entry",
+		"fieldname": "custom_rejection_reason",
+		"label": "Rejection Reason",
+		"fieldtype": "Long Text",
+		"insert_after": "custom_approval_comments",
+		"depends_on": "eval:doc.custom_approval_status=='Rejected'"
+	}
+]

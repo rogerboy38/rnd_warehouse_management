@@ -1,0 +1,84 @@
+[
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "section_break_zone_tracking",
+		"label": "Zone Status Tracking",
+		"fieldtype": "Section Break",
+		"insert_after": "required_items",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_current_zone_status",
+		"label": "Current Zone Status",
+		"fieldtype": "Select",
+		"options": "\nRed Zone\nGreen Zone",
+		"insert_after": "section_break_zone_tracking",
+		"in_list_view": 1,
+		"read_only": 1,
+		"default": "Red Zone",
+		"description": "Red Zone = Incomplete materials, Green Zone = All materials available"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_zone_status_color",
+		"label": "Zone Status Color",
+		"fieldtype": "Color",
+		"insert_after": "custom_current_zone_status",
+		"read_only": 1,
+		"hidden": 1,
+		"default": "#dc3545"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_material_completion_percentage",
+		"label": "Material Completion %",
+		"fieldtype": "Percent",
+		"insert_after": "custom_zone_status_color",
+		"read_only": 1,
+		"precision": 2,
+		"default": 0
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "column_break_zone_details",
+		"fieldtype": "Column Break",
+		"insert_after": "custom_material_completion_percentage"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_last_stock_entry",
+		"label": "Last Stock Entry",
+		"fieldtype": "Link",
+		"options": "Stock Entry",
+		"insert_after": "column_break_zone_details",
+		"read_only": 1,
+		"description": "Reference to the most recent stock entry"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_last_zone_update",
+		"label": "Last Zone Update",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_last_stock_entry",
+		"read_only": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Work Order",
+		"fieldname": "custom_missing_materials_json",
+		"label": "Missing Materials (JSON)",
+		"fieldtype": "Long Text",
+		"insert_after": "custom_last_zone_update",
+		"read_only": 1,
+		"hidden": 1,
+		"description": "JSON data of missing materials for internal use"
+	}
+]

@@ -1,0 +1,82 @@
+name: Test & Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10']
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    
+    - name: Install Frappe Bench
+      run: |
+        pip install frappe-bench
+        bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+        cd frappe-bench
+    
+    - name: Install ERPNext
+      working-directory: ./frappe-bench
+      run: |
+        bench get-app erpnext --branch version-15
+        bench new-site test.localhost --admin-password admin --install-app erpnext
+    
+    - name: Install RND Warehouse Management
+      working-directory: ./frappe-bench
+      run: |
+        bench get-app rnd_warehouse_management $GITHUB_WORKSPACE
+        bench --site test.localhost install-app rnd_warehouse_management
+    
+    - name: Run Tests
+      working-directory: ./frappe-bench
+      run: |
+        bench --site test.localhost run-tests --app rnd_warehouse_management --coverage
+    
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frappe-bench/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install flake8 pylint black
+    
+    - name: Lint with flake8
+      run: |
+        flake8 rnd_warehouse_management --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 rnd_warehouse_management --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Check code formatting with black
+      run: |
+        black --check rnd_warehouse_management

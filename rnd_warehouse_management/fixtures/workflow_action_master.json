@@ -1,0 +1,27 @@
+[
+	{
+		"doctype": "Workflow Action Master",
+		"workflow_action_name": "Submit for Warehouse Approval",
+		"workflow_name": "Stock Entry Dual Signature Approval"
+	},
+	{
+		"doctype": "Workflow Action Master",
+		"workflow_action_name": "Warehouse Approve",
+		"workflow_name": "Stock Entry Dual Signature Approval"
+	},
+	{
+		"doctype": "Workflow Action Master",
+		"workflow_action_name": "Kitting Approve",
+		"workflow_name": "Stock Entry Dual Signature Approval"
+	},
+	{
+		"doctype": "Workflow Action Master",
+		"workflow_action_name": "Reject",
+		"workflow_name": "Stock Entry Dual Signature Approval"
+	},
+	{
+		"doctype": "Workflow Action Master",
+		"workflow_action_name": "Revise",
+		"workflow_name": "Stock Entry Dual Signature Approval"
+	}
+]

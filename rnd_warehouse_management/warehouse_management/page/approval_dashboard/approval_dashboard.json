@@ -1,0 +1,30 @@
+{
+ "creation": "2025-10-20 06:00:00",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2025-10-20 06:00:00",
+ "modified_by": "Administrator",
+ "module": "Warehouse Management",
+ "name": "approval-dashboard",
+ "owner": "Administrator",
+ "page_name": "Approval Dashboard",
+ "roles": [
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Warehouse Manager"
+  },
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Warehouse Supervisor"
+  }
+ ],
+ "standard": "No",
+ "system_page": 0,
+ "title": "Approval Dashboard",
+ "icon": "fa fa-check-circle"
+}

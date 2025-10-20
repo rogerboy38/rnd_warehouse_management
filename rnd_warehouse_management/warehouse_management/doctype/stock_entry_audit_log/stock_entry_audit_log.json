@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:AUDIT-{#####}",
+ "creation": "2025-10-20 07:22:13",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_1",
+  "stock_entry",
+  "event_type",
+  "event_timestamp",
+  "column_break_4",
+  "user",
+  "user_role",
+  "ip_address",
+  "section_break_8",
+  "field_changed",
+  "previous_value",
+  "new_value",
+  "column_break_12",
+  "approval_level",
+  "approval_status",
+  "section_break_15",
+  "comments",
+  "signature_data",
+  "section_break_18",
+  "additional_data"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Reference Information"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Stock Entry",
+   "options": "Stock Entry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Event Type",
+   "options": "Created\nModified\nSubmitted\nCancelled\nApproval Requested\nApproval Granted\nApproval Rejected\nSignature Added\nEscalated\nComment Added",
+   "reqd": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "event_timestamp",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Event Timestamp",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user_role",
+   "fieldtype": "Link",
+   "label": "User Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "IP Address",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_8",
+   "fieldtype": "Section Break",
+   "label": "Change Details"
+  },
+  {
+   "fieldname": "field_changed",
+   "fieldtype": "Data",
+   "label": "Field Changed"
+  },
+  {
+   "fieldname": "previous_value",
+   "fieldtype": "Long Text",
+   "label": "Previous Value"
+  },
+  {
+   "fieldname": "new_value",
+   "fieldtype": "Long Text",
+   "label": "New Value"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approval_level",
+   "fieldtype": "Int",
+   "label": "Approval Level"
+  },
+  {
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "label": "Approval Status",
+   "options": "Pending\nApproved\nRejected\nEscalated"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break",
+   "label": "Comments & Signatures"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Text Editor",
+   "label": "Comments/Remarks"
+  },
+  {
+   "description": "Base64 encoded signature image",
+   "fieldname": "signature_data",
+   "fieldtype": "Long Text",
+   "label": "Signature Data"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "additional_data",
+   "fieldname": "section_break_18",
+   "fieldtype": "Section Break",
+   "label": "Additional Data"
+  },
+  {
+   "description": "JSON data for additional context",
+   "fieldname": "additional_data",
+   "fieldtype": "Code",
+   "label": "Additional Data (JSON)",
+   "options": "JSON"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2025-10-20 07:22:13",
+ "modified_by": "Administrator",
+ "module": "Warehouse Management",
+ "name": "Stock Entry Audit Log",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 0
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Warehouse Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Auditor",
+   "share": 1
+  }
+ ],
+ "sort_field": "event_timestamp",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

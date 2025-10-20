@@ -1,0 +1,218 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:movement_code",
+ "creation": "2025-10-20 06:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "movement_code",
+  "description",
+  "column_break_3",
+  "category",
+  "stock_movement_type",
+  "section_break_6",
+  "requires_approval",
+  "authorization_level",
+  "column_break_9",
+  "associated_workflow",
+  "auto_create_gi_gt_slip",
+  "section_break_12",
+  "erpnext_stock_entry_purpose",
+  "allow_negative_stock",
+  "column_break_15",
+  "requires_source_warehouse",
+  "requires_target_warehouse",
+  "section_break_18",
+  "validation_rules",
+  "section_break_20",
+  "is_active",
+  "column_break_22",
+  "created_by",
+  "modified_by"
+ ],
+ "fields": [
+  {
+   "fieldname": "movement_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Movement Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Goods Receipt\nGoods Issue\nTransfer Posting\nStock Adjustment\nReservation\nOther\nProduction",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_movement_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Stock Movement Type",
+   "options": "Increase\nDecrease\nTransfer\nNone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_6",
+   "fieldtype": "Section Break",
+   "label": "Approval & Workflow Settings"
+  },
+  {
+   "fieldname": "requires_approval",
+   "fieldtype": "Check",
+   "label": "Requires Approval"
+  },
+  {
+   "fieldname": "authorization_level",
+   "fieldtype": "Select",
+   "label": "Authorization Level",
+   "options": "Standard\nSupervisor\nManager\nDirector"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "associated_workflow",
+   "fieldtype": "Link",
+   "label": "Associated Workflow",
+   "options": "Workflow"
+  },
+  {
+   "fieldname": "auto_create_gi_gt_slip",
+   "fieldtype": "Check",
+   "label": "Auto Create GI-GT Slip"
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break",
+   "label": "ERPNext Integration"
+  },
+  {
+   "fieldname": "erpnext_stock_entry_purpose",
+   "fieldtype": "Select",
+   "label": "ERPNext Stock Entry Purpose",
+   "options": "Material Issue\nMaterial Receipt\nMaterial Transfer\nMaterial Transfer for Manufacture\nMaterial Consumption for Manufacture\nManufacture\nRepack\nSend to Subcontractor"
+  },
+  {
+   "fieldname": "allow_negative_stock",
+   "fieldtype": "Check",
+   "label": "Allow Negative Stock"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requires_source_warehouse",
+   "fieldtype": "Check",
+   "label": "Requires Source Warehouse"
+  },
+  {
+   "fieldname": "requires_target_warehouse",
+   "fieldtype": "Check",
+   "label": "Requires Target Warehouse"
+  },
+  {
+   "fieldname": "section_break_18",
+   "fieldtype": "Section Break",
+   "label": "Validation Rules"
+  },
+  {
+   "fieldname": "validation_rules",
+   "fieldtype": "Code",
+   "label": "Custom Validation Rules (Python)",
+   "options": "Python"
+  },
+  {
+   "fieldname": "section_break_20",
+   "fieldtype": "Section Break",
+   "label": "Status & Audit"
+  },
+  {
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "default": "1",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_22",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "created_by",
+   "fieldtype": "Data",
+   "label": "Created By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "modified_by",
+   "fieldtype": "Data",
+   "label": "Modified By",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-20 06:00:00",
+ "modified_by": "Administrator",
+ "module": "Warehouse Management",
+ "name": "Movement Type Master",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

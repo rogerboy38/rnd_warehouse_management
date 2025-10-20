@@ -1,0 +1,9 @@
+# Migration Patches for RND Warehouse Management
+# Format: module_name.path.to.patch_file
+
+# Version 1.0.0 patches
+rnd_warehouse_management.patches.v1_0.setup_warehouse_types
+rnd_warehouse_management.patches.v1_0.create_default_workflows
+rnd_warehouse_management.patches.v1_0.update_existing_stock_entries
+rnd_warehouse_management.patches.v1_0.setup_custom_roles
+rnd_warehouse_management.patches.v1_0.install_print_formats

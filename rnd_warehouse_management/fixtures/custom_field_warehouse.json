@@ -1,0 +1,97 @@
+[
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_temperature_control",
+		"label": "Temperature Control",
+		"fieldtype": "Check",
+		"insert_after": "is_rejected_warehouse",
+		"description": "Enable if this warehouse requires temperature monitoring"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_target_temperature",
+		"label": "Target Temperature (°C)",
+		"fieldtype": "Float",
+		"insert_after": "custom_temperature_control",
+		"depends_on": "custom_temperature_control",
+		"precision": 1,
+		"description": "Target temperature in Celsius for this warehouse"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_warehouse_code",
+		"label": "Warehouse Code",
+		"fieldtype": "Data",
+		"insert_after": "custom_target_temperature",
+		"unique": 1,
+		"description": "Unique warehouse identification code"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "section_break_zone_config",
+		"label": "Zone Configuration",
+		"fieldtype": "Section Break",
+		"insert_after": "custom_warehouse_code",
+		"collapsible": 1
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_is_zone_warehouse",
+		"label": "Is Zone Warehouse",
+		"fieldtype": "Check",
+		"insert_after": "section_break_zone_config",
+		"description": "Check if this warehouse represents a Red/Green zone"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_zone_type",
+		"label": "Zone Type",
+		"fieldtype": "Select",
+		"options": "\nRed Zone\nGreen Zone",
+		"insert_after": "custom_is_zone_warehouse",
+		"depends_on": "custom_is_zone_warehouse",
+		"description": "Type of zone this warehouse represents"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_max_capacity",
+		"label": "Maximum Capacity",
+		"fieldtype": "Float",
+		"insert_after": "custom_zone_type",
+		"description": "Maximum storage capacity for this warehouse"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "column_break_capacity",
+		"fieldtype": "Column Break",
+		"insert_after": "custom_max_capacity"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_current_utilization",
+		"label": "Current Utilization %",
+		"fieldtype": "Percent",
+		"insert_after": "column_break_capacity",
+		"read_only": 1,
+		"precision": 2,
+		"description": "Current warehouse utilization percentage"
+	},
+	{
+		"doctype": "Custom Field",
+		"dt": "Warehouse",
+		"fieldname": "custom_last_capacity_update",
+		"label": "Last Capacity Update",
+		"fieldtype": "Datetime",
+		"insert_after": "custom_current_utilization",
+		"read_only": 1
+	}
+]

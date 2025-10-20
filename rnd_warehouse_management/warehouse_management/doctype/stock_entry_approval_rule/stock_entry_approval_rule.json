@@ -1,0 +1,172 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:APRL-{####}",
+ "creation": "2025-10-20 07:22:13",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_1",
+  "movement_type",
+  "enabled",
+  "column_break_2",
+  "approval_level",
+  "approval_sequence",
+  "section_break_5",
+  "approver_role",
+  "approver_user",
+  "column_break_8",
+  "escalation_days",
+  "send_notification",
+  "section_break_10",
+  "conditional_logic",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "fieldname": "movement_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Movement Type",
+   "options": "Movement Type Master",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "approval_level",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Approval Level",
+   "reqd": 1
+  },
+  {
+   "default": "Sequential",
+   "fieldname": "approval_sequence",
+   "fieldtype": "Select",
+   "label": "Approval Sequence",
+   "options": "Sequential\nParallel",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break",
+   "label": "Approver Configuration"
+  },
+  {
+   "fieldname": "approver_role",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Approver Role",
+   "options": "Role",
+   "reqd": 1
+  },
+  {
+   "description": "Leave blank to allow any user with the specified role",
+   "fieldname": "approver_user",
+   "fieldtype": "Link",
+   "label": "Specific Approver (Optional)",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "2",
+   "description": "Number of days before escalation to next level",
+   "fieldname": "escalation_days",
+   "fieldtype": "Int",
+   "label": "Escalation Days"
+  },
+  {
+   "default": "1",
+   "fieldname": "send_notification",
+   "fieldtype": "Check",
+   "label": "Send Notification to Approver"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_10",
+   "fieldtype": "Section Break",
+   "label": "Advanced Configuration"
+  },
+  {
+   "description": "Python expression for conditional approval (e.g., stock_entry.total_value > 10000). Leave blank for always applicable.",
+   "fieldname": "conditional_logic",
+   "fieldtype": "Code",
+   "label": "Conditional Logic (Python)",
+   "options": "Python"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-20 07:22:13",
+ "modified_by": "Administrator",
+ "module": "Warehouse Management",
+ "name": "Stock Entry Approval Rule",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Warehouse Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

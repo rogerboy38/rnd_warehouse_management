@@ -1,0 +1,32 @@
+[
+	{
+		"doctype": "Server Script",
+		"name": "Stock Entry Signature Validation",
+		"module": "Warehouse Management",
+		"script_type": "DocType Event",
+		"doctype_event": "Before Save",
+		"reference_doctype": "Stock Entry",
+		"disabled": 0,
+		"script": "\n# Validate signatures based on workflow state and SAP movement type\nif doc.workflow_state == 'Warehouse Approved':\n\tif not doc.custom_warehouse_supervisor_signature:\n\t\tfrappe.throw('Warehouse Supervisor signature is required for approval')\n\tif not doc.custom_warehouse_supervisor_sign_date:\n\t\tdoc.custom_warehouse_supervisor_sign_date = frappe.utils.now_datetime()\n\nelif doc.workflow_state == 'Kitting Approved':\n\tif doc.custom_sap_movement_type == '311' and not doc.custom_kitting_supervisor_signature:\n\t\tfrappe.throw('Kitting Supervisor signature is required for SAP Movement 311')\n\tif doc.custom_kitting_supervisor_signature and not doc.custom_kitting_supervisor_sign_date:\n\t\tdoc.custom_kitting_supervisor_sign_date = frappe.utils.now_datetime()\n\n# Auto-generate GI/GT slip number\nif not doc.custom_gi_gt_slip_number and doc.workflow_state in ['Warehouse Approved', 'Kitting Approved']:\n\tdoc.custom_gi_gt_slip_number = f'GI-GT-{doc.name}'\n\tdoc.custom_gi_gt_slip_generated_on = frappe.utils.now_datetime()\n"
+	},
+	{
+		"doctype": "Server Script",
+		"name": "Work Order Zone Status Update",
+		"module": "Warehouse Management",
+		"script_type": "DocType Event",
+		"doctype_event": "On Submit",
+		"reference_doctype": "Stock Entry",
+		"disabled": 0,
+		"script": "\n# Update Work Order zone status when Stock Entry is submitted\nif doc.custom_work_order_reference and doc.custom_zone_status:\n\tfrappe.db.set_value('Work Order', doc.custom_work_order_reference, {\n\t\t'custom_current_zone_status': doc.custom_zone_status,\n\t\t'custom_material_completion_percentage': doc.custom_material_completion_percentage,\n\t\t'custom_last_stock_entry': doc.name,\n\t\t'custom_last_zone_update': frappe.utils.now_datetime()\n\t})\n\tfrappe.db.commit()\n"
+	},
+	{
+		"doctype": "Server Script",
+		"name": "SAP Movement Type Validation",
+		"module": "Warehouse Management",
+		"script_type": "DocType Event",
+		"doctype_event": "Validate",
+		"reference_doctype": "Stock Entry",
+		"disabled": 0,
+		"script": "\n# Validate SAP Movement Type requirements\nif doc.custom_sap_movement_type:\n\t# Define movement type requirements\n\tsap_rules = {\n\t\t'261': {  # FrontFlush\n\t\t\t'purpose': 'Material Issue',\n\t\t\t'required_signatures': ['warehouse_supervisor']\n\t\t},\n\t\t'311': {  # BackFlush\n\t\t\t'purpose': 'Material Transfer',\n\t\t\t'required_signatures': ['warehouse_supervisor', 'kitting_supervisor']\n\t\t}\n\t}\n\t\n\trules = sap_rules.get(doc.custom_sap_movement_type)\n\tif rules:\n\t\t# Validate purpose\n\t\tif doc.purpose != rules['purpose']:\n\t\t\tfrappe.msgprint(f'Purpose should be {rules[\"purpose\"]} for SAP Movement {doc.custom_sap_movement_type}', alert=True)\n\t\t\n\t\t# Validate warehouse types for items\n\t\tfor item in doc.items:\n\t\t\tif item.s_warehouse:\n\t\t\t\tsource_type = frappe.db.get_value('Warehouse', item.s_warehouse, 'warehouse_type')\n\t\t\t\tif doc.custom_sap_movement_type == '261' and source_type not in ['Raw Material', 'Work In Progress']:\n\t\t\t\t\tfrappe.throw(f'Source warehouse {item.s_warehouse} type not allowed for SAP Movement 261')\n\t\t\t\t\t\n\t\t\t\telif doc.custom_sap_movement_type == '311' and source_type not in ['Work In Progress']:\n\t\t\t\t\tfrappe.throw(f'Source warehouse {item.s_warehouse} type not allowed for SAP Movement 311')\n"
+	}
+]
