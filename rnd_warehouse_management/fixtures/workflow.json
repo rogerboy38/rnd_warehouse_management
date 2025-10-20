@@ -68,7 +68,7 @@
         "doctype": "Workflow Document State",
         "state": "Draft",
         "doc_status": "0",
-        "allow_edit": "Warehouse Supervisor,Kitting Supervisor,Stock User"
+        "allow_edit": "Stock User"
       },
       {
         "doctype": "Workflow Document State",
@@ -86,13 +86,13 @@
         "doctype": "Workflow Document State",
         "state": "Kitting Approved",
         "doc_status": "1",
-        "allow_edit": ""
+        "allow_edit": "Stock Manager"
       },
       {
         "doctype": "Workflow Document State",
         "state": "Rejected",
         "doc_status": "0",
-        "allow_edit": "Warehouse Supervisor,Kitting Supervisor"
+        "allow_edit": "Stock Manager"
       }
     ]
   }
