@@ -7,6 +7,61 @@
     "is_active": 1,
     "send_email_alert": 1,
     "description": "Dual signature approval workflow for Stock Entry with SAP movement types",
-    "name": "Stock Entry Dual Signature Approval"
+    "name": "Stock Entry Dual Signature Approval",
+    "transitions": [
+      {
+        "state": "Draft",
+        "action": "Submit for Warehouse Approval",
+        "next_state": "Pending Warehouse Approval",
+        "allowed": "Warehouse Supervisor,Stock User",
+        "condition": "doc.custom_sap_movement_type",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Pending Warehouse Approval",
+        "action": "Warehouse Approve",
+        "next_state": "Warehouse Approved",
+        "allowed": "Warehouse Supervisor",
+        "condition": "doc.custom_warehouse_supervisor_signature",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Warehouse Approved",
+        "action": "Kitting Approve",
+        "next_state": "Kitting Approved",
+        "allowed": "Kitting Supervisor",
+        "condition": "doc.custom_kitting_supervisor_signature and doc.custom_sap_movement_type == '311'",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Warehouse Approved",
+        "action": "Kitting Approve",
+        "next_state": "Kitting Approved",
+        "allowed": "Warehouse Supervisor",
+        "condition": "doc.custom_sap_movement_type == '261'",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Pending Warehouse Approval",
+        "action": "Reject",
+        "next_state": "Rejected",
+        "allowed": "Warehouse Supervisor",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Warehouse Approved",
+        "action": "Reject",
+        "next_state": "Rejected",
+        "allowed": "Kitting Supervisor",
+        "doctype": "Workflow Transition"
+      },
+      {
+        "state": "Rejected",
+        "action": "Revise",
+        "next_state": "Draft",
+        "allowed": "Warehouse Supervisor,Stock User",
+        "doctype": "Workflow Transition"
+      }
+    ]
   }
 ]
