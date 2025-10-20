@@ -1,0 +1,579 @@
+/* RND Warehouse Management CSS Styles */
+
+/* Zone Status Styling */
+.zone-red .control-input-wrapper {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.zone-green .control-input-wrapper {
+    border-left: 4px solid #28a745 !important;
+}
+
+.zone-red .control-label {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.zone-green .control-label {
+    color: #28a745 !important;
+    font-weight: bold;
+}
+
+/* Completion Percentage Styling */
+.completion-low .control-input-wrapper {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.completion-medium .control-input-wrapper {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.completion-high .control-input-wrapper {
+    border-left: 4px solid #28a745 !important;
+}
+
+/* Signature Field Styling */
+.signature-completed .control-input-wrapper {
+    border: 2px solid #28a745 !important;
+    background-color: #f8fff9 !important;
+}
+
+.signature-completed .control-label::after {
+    content: " ✓";
+    color: #28a745;
+    font-weight: bold;
+}
+
+.signature-pending .control-input-wrapper {
+    border: 2px dashed #ffc107 !important;
+    background-color: #fffdf5 !important;
+}
+
+.signature-required .control-input-wrapper {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5 !important;
+}
+
+/* SAP Movement Type Styling */
+.sap-movement-261 {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.sap-movement-311 {
+    background-color: #6f42c1;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+/* GI/GT Slip Print Format Enhancements */
+.gi-gt-slip {
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.gi-gt-slip .header {
+    text-align: center;
+    border-bottom: 2px solid #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.gi-gt-slip .company-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.gi-gt-slip .document-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.gi-gt-slip .info-section {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.gi-gt-slip .info-box {
+    border: 1px solid #ddd;
+    padding: 10px;
+    width: 48%;
+}
+
+.gi-gt-slip .info-title {
+    font-weight: bold;
+    background-color: #f5f5f5;
+    padding: 5px;
+    margin: -10px -10px 10px -10px;
+}
+
+.gi-gt-slip .field-row {
+    margin: 8px 0;
+}
+
+.gi-gt-slip .field-label {
+    font-weight: bold;
+    display: inline-block;
+    width: 120px;
+}
+
+.gi-gt-slip .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.gi-gt-slip .items-table th,
+.gi-gt-slip .items-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.gi-gt-slip .items-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.gi-gt-slip .signature-section {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px 0;
+}
+
+.gi-gt-slip .signature-box {
+    border: 1px solid #ddd;
+    padding: 15px;
+    width: 45%;
+    text-align: center;
+}
+
+.gi-gt-slip .signature-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.gi-gt-slip .signature-image {
+    max-width: 150px;
+    max-height: 75px;
+    margin: 10px 0;
+}
+
+.gi-gt-slip .signature-line {
+    border-bottom: 1px solid #333;
+    height: 60px;
+    margin: 10px 0;
+}
+
+.gi-gt-slip .signature-date {
+    font-size: 10px;
+    margin-top: 10px;
+}
+
+/* Dashboard Enhancements */
+.warehouse-dashboard .zone-status-card {
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.warehouse-dashboard .zone-red-card {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.warehouse-dashboard .zone-green-card {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+}
+
+.warehouse-dashboard .completion-meter {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 20px;
+    margin: 10px 0;
+}
+
+.warehouse-dashboard .completion-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.warehouse-dashboard .completion-low {
+    background-color: #dc3545;
+}
+
+.warehouse-dashboard .completion-medium {
+    background-color: #ffc107;
+}
+
+.warehouse-dashboard .completion-high {
+    background-color: #28a745;
+}
+
+/* Material Status Dialog */
+.material-summary {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.material-summary h4 {
+    margin-top: 0;
+    color: #495057;
+}
+
+/* Workflow State Indicators */
+.workflow-pending {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.workflow-approved {
+    background-color: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.workflow-rejected {
+    background-color: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .gi-gt-slip .info-section {
+        flex-direction: column;
+    }
+    
+    .gi-gt-slip .info-box {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .gi-gt-slip .signature-section {
+        flex-direction: column;
+    }
+    
+    .gi-gt-slip .signature-box {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
+
+/* Print Specific Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .gi-gt-slip {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .gi-gt-slip .signature-section {
+        page-break-inside: avoid;
+    }
+    
+    .gi-gt-slip .items-table {
+        page-break-inside: auto;
+    }
+    
+    .gi-gt-slip .items-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}
+
+/* Animation and Transitions */
+.zone-status-transition {
+    transition: all 0.3s ease;
+}
+
+.signature-capture-animation {
+    animation: signatureCapture 0.5s ease;
+}
+
+@keyframes signatureCapture {
+    0% {
+        transform: scale(1);
+        border-color: #ddd;
+    }
+    50% {
+        transform: scale(1.02);
+        border-color: #28a745;
+    }
+    100% {
+        transform: scale(1);
+        border-color: #28a745;
+    }
+}
+
+/* Custom Alert Styles */
+.warehouse-alert {
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 10px 0;
+}
+
+.warehouse-alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.warehouse-alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.warehouse-alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.warehouse-alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* ========== PHASE 2: APPROVAL WORKFLOW TIMELINE STYLES ========== */
+
+/* Approval Workflow Timeline */
+.approval-workflow-timeline {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.approval-workflow-timeline h5 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.timeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.timeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px;
+    background-color: white;
+    border-radius: 6px;
+    border-left: 4px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.timeline-step-completed {
+    border-left-color: #28a745;
+    background-color: #f1f9f3;
+}
+
+.timeline-step-current {
+    border-left-color: #ffc107;
+    background-color: #fffef5;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.timeline-step-rejected {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.timeline-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.timeline-step-completed .timeline-icon {
+    background-color: #28a745;
+    color: white;
+}
+
+.timeline-step-current .timeline-icon {
+    background-color: #ffc107;
+    color: #333;
+    animation: pulse 2s infinite;
+}
+
+.timeline-step-rejected .timeline-icon {
+    background-color: #dc3545;
+    color: white;
+}
+
+.timeline-step .timeline-icon {
+    background-color: #dee2e6;
+    color: #6c757d;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-content strong {
+    color: #212529;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.timeline-content .text-muted {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.timeline-content small {
+    color: #6c757d;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* Approval Status Badges */
+.indicator-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.indicator-pill.green {
+    background-color: #28a745;
+    color: white;
+}
+
+.indicator-pill.red {
+    background-color: #dc3545;
+    color: white;
+}
+
+.indicator-pill.orange {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.indicator-pill.blue {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Approval Dialog Enhancements */
+.approval-dialog .modal-body {
+    padding: 20px;
+}
+
+.approval-comments-field {
+    min-height: 100px;
+}
+
+.signature-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.signature-upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+/* Approval History Table */
+.approval-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.approval-history-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.approval-history-table td {
+    padding: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.approval-history-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Responsive Design for Approval Timeline */
+@media (max-width: 768px) {
+    .timeline-steps {
+        gap: 10px;
+    }
+    
+    .timeline-step {
+        padding: 10px;
+    }
+    
+    .timeline-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .approval-workflow-timeline {
+        padding: 15px;
+    }
+}
