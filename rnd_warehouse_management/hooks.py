@@ -23,8 +23,12 @@ website_route_rules = [
 ]
 
 # Include JS and CSS
-app_include_css = "/assets/rnd_warehouse_management/css/warehouse_management.css"
-app_include_js = "/assets/rnd_warehouse_management/js/warehouse_management.js"
+app_include_css = ["/assets/rnd_warehouse_management/css/warehouse_management.css"]
+app_include_js = ["/assets/rnd_warehouse_management/js/warehouse_management.js"]
+
+# Website assets (not used but defined to prevent undefined errors)
+web_include_css = []
+web_include_js = []
 
 # Include Specific DocType Assets
 doctype_js = {
