@@ -32,13 +32,13 @@ web_include_js = []
 
 # Include Specific DocType Assets
 doctype_js = {
-	"Stock Entry": "public/js/stock_entry.js",
-	"Work Order": "public/js/work_order.js",
-	"Warehouse": "public/js/warehouse.js"
+	"Stock Entry": "js/stock_entry.js",
+	"Work Order": "js/work_order.js",
+	"Warehouse": "js/warehouse.js"
 }
 
 doctype_list_js = {
-	"Stock Entry": "public/js/stock_entry_list.js"
+	"Stock Entry": "js/stock_entry_list.js"
 }
 
 # DocType Event Hooks
