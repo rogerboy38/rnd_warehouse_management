@@ -88,8 +88,6 @@ scheduler_events = {
 	"daily": [
 		"rnd_warehouse_management.warehouse_management.tasks.cleanup_expired_signatures",
 		"rnd_warehouse_management.warehouse_management.tasks.generate_warehouse_reports",
-		# Phase 2: Auto-escalation of overdue approvals (runs daily at 9 AM)
-		"rnd_warehouse_management.warehouse_management.stock_entry.check_and_escalate_overdue_approvals"
 	]
 }
 
