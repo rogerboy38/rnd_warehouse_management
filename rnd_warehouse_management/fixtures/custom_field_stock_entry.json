@@ -4,34 +4,12 @@
 		"dt": "Stock Entry",
 		"fieldname": "custom_sap_movement_type",
 		"label": "SAP Movement Type",
-		"fieldtype": "Link",
-		"options": "Movement Type Master",
+		"fieldtype": "Select",
+		"options": "\n261 (FrontFlush - Goods Issue for Production)\n311 (BackFlush - Transfer for Kitting)",
 		"insert_after": "purpose",
 		"in_list_view": 1,
 		"in_standard_filter": 1,
-		"description": "SAP-style movement type for warehouse operations",
-		"reqd": 0
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_movement_type_description",
-		"label": "Movement Type Description",
-		"fieldtype": "Data",
-		"insert_after": "custom_sap_movement_type",
-		"read_only": 1,
-		"description": "Auto-populated from Movement Type Master"
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_movement_category",
-		"label": "Movement Category",
-		"fieldtype": "Data",
-		"insert_after": "custom_movement_type_description",
-		"read_only": 1,
-		"in_list_view": 0,
-		"description": "Auto-populated from Movement Type Master"
+		"description": "SAP-style movement type for warehouse operations"
 	},
 	{
 		"doctype": "Custom Field",
@@ -162,87 +140,5 @@
 		"fieldtype": "Datetime",
 		"insert_after": "custom_kitting_supervisor_signature",
 		"read_only": 1
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "section_break_approval_workflow",
-		"label": "Approval Workflow Status",
-		"fieldtype": "Section Break",
-		"insert_after": "custom_kitting_supervisor_sign_date",
-		"collapsible": 1
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_approval_status",
-		"label": "Approval Status",
-		"fieldtype": "Select",
-		"options": "\nDraft\nPending Level 1\nLevel 1 Approved\nPending Level 2\nLevel 2 Approved\nPending Level 3\nLevel 3 Approved\nPending Level 4\nLevel 4 Approved\nPending Level 5\nLevel 5 Approved\nFully Approved\nRejected",
-		"insert_after": "section_break_approval_workflow",
-		"in_list_view": 1,
-		"in_standard_filter": 1,
-		"read_only": 1,
-		"default": "Draft"
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_current_approval_level",
-		"label": "Current Approval Level",
-		"fieldtype": "Int",
-		"insert_after": "custom_approval_status",
-		"read_only": 1,
-		"default": 0
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "column_break_approval_info",
-		"fieldtype": "Column Break",
-		"insert_after": "custom_current_approval_level"
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_pending_approver",
-		"label": "Pending Approver",
-		"fieldtype": "Link",
-		"options": "User",
-		"insert_after": "column_break_approval_info",
-		"read_only": 1
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_approval_requested_on",
-		"label": "Approval Requested On",
-		"fieldtype": "Datetime",
-		"insert_after": "custom_pending_approver",
-		"read_only": 1
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "section_break_approval_comments",
-		"fieldtype": "Section Break",
-		"insert_after": "custom_approval_requested_on"
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_approval_comments",
-		"label": "Approval Comments",
-		"fieldtype": "Text Editor",
-		"insert_after": "section_break_approval_comments"
-	},
-	{
-		"doctype": "Custom Field",
-		"dt": "Stock Entry",
-		"fieldname": "custom_rejection_reason",
-		"label": "Rejection Reason",
-		"fieldtype": "Long Text",
-		"insert_after": "custom_approval_comments",
-		"depends_on": "eval:doc.custom_approval_status=='Rejected'"
 	}
 ]
