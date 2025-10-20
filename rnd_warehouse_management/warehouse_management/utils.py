@@ -861,3 +861,108 @@ def batch_update_material_assessments(warehouse=None):
     except Exception as e:
         frappe.log_error(f"Batch material assessment update failed: {str(e)}")
         return {"status": "error", "message": str(e)}
+
+# ===================================================================
+# JINJA TEMPLATE HELPER FUNCTIONS (for Print Formats)
+# ===================================================================
+
+def get_signature_image(doc, field_name):
+    """
+    Get signature image URL from document field for use in Print Formats.
+    
+    Args:
+        doc: The document object
+        field_name (str): Field name containing the signature image URL
+        
+    Returns:
+        str: Signature image URL or empty string
+    """
+    try:
+        if hasattr(doc, field_name):
+            signature_url = getattr(doc, field_name)
+            return signature_url or ""
+        return ""
+    except Exception as e:
+        frappe.log_error(f"Error retrieving signature image: {str(e)}")
+        return ""
+
+def format_sap_movement_type(movement_type):
+    """
+    Format SAP movement type code with description for display in templates.
+    
+    Args:
+        movement_type (str): SAP movement type code (e.g., '261', '311')
+        
+    Returns:
+        str: Formatted movement type with description
+    """
+    try:
+        if not movement_type:
+            return ""
+        
+        # Get movement type details from Movement Type Master
+        movement_doc = frappe.db.get_value(
+            "Movement Type Master",
+            {"movement_code": movement_type},
+            ["movement_code", "movement_description", "short_text"],
+            as_dict=True
+        )
+        
+        if movement_doc:
+            return f"{movement_doc.movement_code} - {movement_doc.short_text or movement_doc.movement_description}"
+        
+        # Fallback for common movement types
+        common_types = {
+            "261": "261 - FrontFlush (Goods Issue for Production)",
+            "311": "311 - BackFlush (Transfer for Kitting)",
+            "101": "101 - Goods Receipt",
+            "201": "201 - Goods Issue",
+            "301": "301 - Transfer Posting"
+        }
+        
+        return common_types.get(movement_type, f"{movement_type} - SAP Movement")
+        
+    except Exception as e:
+        frappe.log_error(f"Error formatting SAP movement type: {str(e)}")
+        return movement_type or ""
+
+def get_zone_status_badge(zone_status):
+    """
+    Generate HTML badge for zone status display in templates.
+    
+    Args:
+        zone_status (str): Zone status ('Red Zone', 'Green Zone', etc.)
+        
+    Returns:
+        str: HTML markup for zone status badge
+    """
+    try:
+        if not zone_status:
+            return ""
+        
+        # Determine badge color and icon
+        if "Red" in zone_status or "red" in zone_status:
+            color_class = "zone-red"
+            bg_color = "#dc3545"
+            icon = "⚠️"
+        elif "Green" in zone_status or "green" in zone_status:
+            color_class = "zone-green"
+            bg_color = "#28a745"
+            icon = "✓"
+        else:
+            color_class = "zone-default"
+            bg_color = "#6c757d"
+            icon = "•"
+        
+        # Generate HTML badge
+        badge_html = f"""
+        <span class='zone-status {color_class}' style='background-color: {bg_color}; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold; display: inline-block;'>
+            {icon} {zone_status}
+        </span>
+        """
+        
+        return badge_html
+        
+    except Exception as e:
+        frappe.log_error(f"Error generating zone status badge: {str(e)}")
+        return zone_status or ""
