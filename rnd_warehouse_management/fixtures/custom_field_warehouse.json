@@ -28,8 +28,7 @@
   "label": "Warehouse Code",
   "fieldtype": "Data",
   "insert_after": "custom_target_temperature",
-  "unique": 1,
-  "description": "Unique warehouse identification code",
+  "description": "Warehouse identification code",
   "name": "Warehouse-custom_warehouse_code"
  },
  {

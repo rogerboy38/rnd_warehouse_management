@@ -7,7 +7,7 @@ name = "rnd_warehouse_management"
 dynamic = ["version"]
 description = "RND Warehouse Management System for ERPNext with SAP-style workflow integration"
 authors = [
-    {name = "RogerBoy", email = "support@example.com"}
+    {name = "RogerBoy", email = "rogerboy38@hotmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
