@@ -28,12 +28,7 @@
   "label": "Warehouse Code",
   "fieldtype": "Data",
   "insert_after": "custom_target_temperature",
-<<<<<<< Updated upstream
   "description": "Warehouse identification code",
-=======
-  "unique": 0,
-  "description": "Unique warehouse identification code",
->>>>>>> Stashed changes
   "name": "Warehouse-custom_warehouse_code"
  },
  {
