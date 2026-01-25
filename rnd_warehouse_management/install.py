@@ -32,8 +32,7 @@ def after_install():
 def create_default_movement_types():
     """Create default movement types if they don't exist"""
     print("📋 Setting up default movement types...")
-    
-    movement_types = [
+        movement_types = [
         {
             "doctype": "Movement Type",
             "movement_type_name": "Material Receipt",
@@ -60,6 +59,8 @@ def create_default_movement_types():
     created_count = 0
     for mt_data in movement_types:
         if not frappe.db.exists("Movement Type", mt_data["movement_type_name"]):
+            # Add name field before creating document
+            mt_data['name'] = mt_data['movement_type_name'].replace(' ', '_').upper()
             frappe.get_doc(mt_data).insert(ignore_permissions=True)
             created_count += 1
     
