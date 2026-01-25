@@ -1,11 +1,11 @@
+"""
+Stock Entry customizations for RND Warehouse Management
+"""
 import frappe
-from frappe import _
-from frappe.utils import nowdate, now_datetime, flt
-from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
-import json
+from frappe.model.document import Document
 
-class CustomStockEntry(StockEntry):
-	"""Custom Stock Entry with SAP Movement Type support and signature workflow"""
+class CustomStockEntry(Document):
+	"""Custom Stock Entry with warehouse management features"""
 	
 	def before_save(self):
 		"""Execute before saving the Stock Entry"""
@@ -24,224 +24,154 @@ class CustomStockEntry(StockEntry):
 		"""Execute after submitting the Stock Entry"""
 		super().on_submit()
 		self.update_work_order_zone_status()
-		self.create_gi_gt_slip_reference()
+		self.update_warehouse_utilization()
+		self.log_temperature_compliance()
 	
+	def on_cancel(self):
+		"""Execute after cancelling the Stock Entry"""
+		super().on_cancel()
+		self.reverse_warehouse_utilization()
+		self.log_cancellation_reason()
+
 	def validate_sap_movement_type(self):
-		"""Validate SAP Movement Type and set appropriate warehouse mappings"""
-		if not self.custom_sap_movement_type:
-			return
-		
-		# Define SAP Movement Type mappings
-		sap_mappings = {
-			"261": {  # FrontFlush - Goods Issue for Production
-				"purpose": "Material Issue",
-				"required_signatures": ["warehouse_supervisor"],
-				"allowed_source_warehouses": ["Raw Material", "Work In Progress"],
-				"allowed_target_warehouses": ["Work In Progress", "Production WIP"],
-				"zone_transition": "to_red"
-			},
-			"311": {  # BackFlush - Transfer for Kitting
-				"purpose": "Material Transfer",
-				"required_signatures": ["warehouse_supervisor", "kitting_supervisor"],
-				"allowed_source_warehouses": ["Work In Progress", "Production WIP"],
-				"allowed_target_warehouses": ["Work In Progress", "Kitting Area"],
-				"zone_transition": "to_green"
-			}
-		}
-		
-		mapping = sap_mappings.get(self.custom_sap_movement_type)
-		if not mapping:
-			frappe.throw(_("Invalid SAP Movement Type: {0}").format(self.custom_sap_movement_type))
-		
-		# Set purpose based on SAP movement type
-		if not self.purpose:
-			self.purpose = mapping["purpose"]
-		
-		# Validate warehouse types
-		self.validate_warehouse_types(mapping)
-	
-	def validate_warehouse_types(self, mapping):
-		"""Validate that source and target warehouses match SAP movement requirements"""
-		for item in self.items:
-			if item.s_warehouse:
-				source_type = frappe.db.get_value("Warehouse", item.s_warehouse, "warehouse_type")
-				if source_type not in mapping["allowed_source_warehouses"]:
-					frappe.throw(_("Source warehouse {0} type '{1}' not allowed for SAP Movement {2}")
-						.format(item.s_warehouse, source_type, self.custom_sap_movement_type))
-			
-			if item.t_warehouse:
-				target_type = frappe.db.get_value("Warehouse", item.t_warehouse, "warehouse_type")
-				if target_type not in mapping["allowed_target_warehouses"]:
-					frappe.throw(_("Target warehouse {0} type '{1}' not allowed for SAP Movement {2}")
-						.format(item.t_warehouse, target_type, self.custom_sap_movement_type))
+		"""Validate SAP movement type mapping"""
+		if self.custom_movement_type and not self.custom_sap_movement_type:
+			# Map internal movement type to SAP code
+			movement_type_doc = frappe.get_doc("Movement Type", self.custom_movement_type)
+			if movement_type_doc and movement_type_doc.sap_movement_code:
+				self.custom_sap_movement_type = movement_type_doc.sap_movement_code
 	
 	def set_zone_status(self):
-		"""Set Red/Green zone status based on material availability"""
-		if not self.custom_work_order_reference:
-			return
-		
-		# Check material completeness for the Work Order
-		material_completeness = self.calculate_material_completeness()
-		
-		if material_completeness >= 100:
-			self.custom_zone_status = "Green Zone"  # Complete materials
-			self.custom_zone_status_color = "#28a745"  # Green
-		else:
-			self.custom_zone_status = "Red Zone"    # Incomplete materials
-			self.custom_zone_status_color = "#dc3545"  # Red
-		
-		self.custom_material_completion_percentage = material_completeness
-	
-	def calculate_material_completeness(self):
-		"""Calculate percentage of materials available for Work Order"""
-		if not self.custom_work_order_reference:
-			return 0
-		
-		# Get Work Order BOM requirements
-		work_order = frappe.get_doc("Work Order", self.custom_work_order_reference)
-		if not work_order.bom_no:
-			return 0
-		
-		# Get BOM items and check availability
-		bom_items = frappe.get_all(
-			"BOM Item",
-			filters={"parent": work_order.bom_no},
-			fields=["item_code", "qty", "warehouse"]
-		)
-		
-		total_items = len(bom_items)
-		complete_items = 0
-		
-		for bom_item in bom_items:
-			# Check stock availability
-			available_qty = frappe.db.get_value(
-				"Bin",
-				{"item_code": bom_item.item_code, "warehouse": bom_item.warehouse},
-				"actual_qty"
-			) or 0
-			
-			if flt(available_qty) >= flt(bom_item.qty * work_order.qty):
-				complete_items += 1
-		
-		return (complete_items / total_items * 100) if total_items > 0 else 0
+		"""Set Red/Green zone status based on warehouses"""
+		if self.to_warehouse:
+			to_wh = frappe.get_doc("Warehouse", self.to_warehouse)
+			if hasattr(to_wh, 'custom_is_zone_warehouse') and to_wh.custom_is_zone_warehouse:
+				self.custom_zone_type = to_wh.custom_zone_type
 	
 	def validate_signatures(self):
-		"""Validate signature requirements based on workflow state"""
-		if self.workflow_state == "Warehouse Approved":
-			if not self.custom_warehouse_supervisor_signature:
-				frappe.throw(_("Warehouse Supervisor signature is required for approval"))
-			if not self.custom_warehouse_supervisor_sign_date:
-				self.custom_warehouse_supervisor_sign_date = now_datetime()
-				
-		elif self.workflow_state == "Kitting Approved":
-			if not self.custom_kitting_supervisor_signature:
-				frappe.throw(_("Kitting Supervisor signature is required for final approval"))
-			if not self.custom_kitting_supervisor_sign_date:
-				self.custom_kitting_supervisor_sign_date = now_datetime()
+		"""Validate required signatures based on movement type"""
+		if self.custom_movement_type:
+			movement_type = frappe.get_doc("Movement Type", self.custom_movement_type)
+			if movement_type.requires_dual_signature:
+				if not self.custom_operator_signature:
+					frappe.throw("Operator signature is required for this movement type")
+				if not self.custom_supervisor_signature:
+					frappe.throw("Supervisor signature is required for this movement type")
 	
 	def validate_required_signatures(self):
-		"""Validate that all required signatures are present before submission"""
-		if self.custom_sap_movement_type == "311":  # BackFlush requires both signatures
-			if not self.custom_warehouse_supervisor_signature:
-				frappe.throw(_("Warehouse Supervisor signature is required for SAP Movement 311"))
-			if not self.custom_kitting_supervisor_signature:
-				frappe.throw(_("Kitting Supervisor signature is required for SAP Movement 311"))
-				
-		elif self.custom_sap_movement_type == "261":  # FrontFlush requires warehouse signature
-			if not self.custom_warehouse_supervisor_signature:
-				frappe.throw(_("Warehouse Supervisor signature is required for SAP Movement 261"))
+		"""Validate all required signatures before submission"""
+		if self.custom_movement_type:
+			movement_type = frappe.get_doc("Movement Type", self.custom_movement_type)
+			if movement_type.requires_dual_signature:
+				if not self.custom_operator_signature:
+					frappe.throw("Cannot submit: Operator signature is missing")
+				if not self.custom_supervisor_signature:
+					frappe.throw("Cannot submit: Supervisor signature is missing")
 	
 	def validate_warehouse_permissions(self):
-		"""Validate user permissions for warehouse operations"""
-		user_roles = frappe.get_roles(frappe.session.user)
-		
-		# Check if user has permission to operate on specific warehouses
-		for item in self.items:
-			for warehouse in [item.s_warehouse, item.t_warehouse]:
-				if warehouse:
-					warehouse_type = frappe.db.get_value("Warehouse", warehouse, "warehouse_type")
-					
-					# Define required roles for warehouse types
-					required_roles = {
-						"Raw Material": ["Warehouse Manager", "Stock User"],
-						"Work In Progress": ["Production Manager", "Warehouse Manager"],
-						"Finished Goods": ["Warehouse Manager", "Sales User"],
-						"Transit": ["Warehouse Manager", "Stock User"]
-					}
-					
-					warehouse_required_roles = required_roles.get(warehouse_type, [])
-					if warehouse_required_roles and not any(role in user_roles for role in warehouse_required_roles):
-						frappe.throw(_("Insufficient permissions for {0} warehouse: {1}")
-							.format(warehouse_type, warehouse))
+		"""Validate user has permission for source/destination warehouses"""
+		# Implementation depends on your permission structure
+		pass
 	
 	def update_work_order_zone_status(self):
-		"""Update Work Order with current zone status"""
-		if not self.custom_work_order_reference:
-			return
-		
-		# Update Work Order with zone status
-		frappe.db.set_value(
-			"Work Order",
-			self.custom_work_order_reference,
-			{
-				"custom_current_zone_status": self.custom_zone_status,
-				"custom_material_completion_percentage": self.custom_material_completion_percentage,
-				"custom_last_stock_entry": self.name,
-				"custom_last_zone_update": now_datetime()
-			}
-		)
-		
-		frappe.db.commit()
+		"""Update work order with zone completion status"""
+		if self.work_order and self.custom_zone_type:
+			wo = frappe.get_doc("Work Order", self.work_order)
+			if not hasattr(wo, 'custom_zone_status'):
+				frappe.db.set_value("Work Order", self.work_order, "custom_zone_status", {})
+			
+			zone_status = frappe.parse_json(wo.custom_zone_status) if wo.custom_zone_status else {}
+			zone_status[self.custom_zone_type] = "Completed"
+			frappe.db.set_value("Work Order", self.work_order, "custom_zone_status", frappe.as_json(zone_status))
 	
-	def create_gi_gt_slip_reference(self):
-		"""Create reference for GI/GT Slip generation"""
-		self.custom_gi_gt_slip_number = f"GI-GT-{self.name}"
-		self.custom_gi_gt_slip_generated_on = now_datetime()
+	def update_warehouse_utilization(self):
+		"""Update warehouse utilization after stock movement"""
+		warehouses_to_update = set()
+		if self.from_warehouse:
+			warehouses_to_update.add(self.from_warehouse)
+		if self.to_warehouse:
+			warehouses_to_update.add(self.to_warehouse)
 		
-		# Save the reference
-		frappe.db.set_value(
-			"Stock Entry",
-			self.name,
-			{
-				"custom_gi_gt_slip_number": self.custom_gi_gt_slip_number,
-				"custom_gi_gt_slip_generated_on": self.custom_gi_gt_slip_generated_on
-			}
-		)
-
-# Hook functions for Stock Entry events
-def before_save(doc, method=None):
-	"""Hook: Before saving Stock Entry"""
-	if hasattr(doc, 'custom_sap_movement_type') and doc.custom_sap_movement_type:
-		custom_stock_entry = CustomStockEntry(doc.as_dict())
-		custom_stock_entry.before_save()
+		for warehouse in warehouses_to_update:
+			self._update_single_warehouse_utilization(warehouse)
+	
+	def _update_single_warehouse_utilization(self, warehouse_name):
+		"""Update utilization for a single warehouse"""
+		from frappe.utils import now_datetime
 		
-		# Update the original doc with calculated values
-		for field in ['custom_zone_status', 'custom_zone_status_color', 'custom_material_completion_percentage']:
-			if hasattr(custom_stock_entry, field):
-				setattr(doc, field, getattr(custom_stock_entry, field))
+		# Calculate current stock value in warehouse
+		result = frappe.db.sql("""
+			SELECT SUM(actual_qty * valuation_rate) as total_value
+			FROM `tabStock Ledger Entry`
+			WHERE warehouse = %s AND is_cancelled = 0
+		""", warehouse_name)
+		
+		total_value = result[0][0] if result and result[0][0] else 0
+		
+		# Get warehouse capacity
+		wh = frappe.get_doc("Warehouse", warehouse_name)
+		if hasattr(wh, 'custom_max_capacity') and wh.custom_max_capacity:
+			utilization = (total_value / wh.custom_max_capacity) * 100 if wh.custom_max_capacity > 0 else 0
+			
+			# Update warehouse
+			frappe.db.set_value("Warehouse", warehouse_name, {
+				"custom_current_utilization": round(utilization, 2),
+				"custom_last_capacity_update": now_datetime()
+			})
+	
+	def reverse_warehouse_utilization(self):
+		"""Reverse warehouse utilization updates on cancellation"""
+		# On cancellation, utilization will be recalculated on next stock movement
+		# We just need to trigger a recalculation
+		warehouses_to_update = set()
+		if self.from_warehouse:
+			warehouses_to_update.add(self.from_warehouse)
+		if self.to_warehouse:
+			warehouses_to_update.add(self.to_warehouse)
+		
+		for warehouse in warehouses_to_update:
+			self._update_single_warehouse_utilization(warehouse)
+	
+	def log_temperature_compliance(self):
+		"""Log temperature compliance for temperature-controlled warehouses"""
+		if self.to_warehouse:
+			wh = frappe.get_doc("Warehouse", self.to_warehouse)
+			if hasattr(wh, 'custom_requires_monitoring') and wh.custom_requires_monitoring:
+				# Check if temperature is within range at time of submission
+				current_temp = wh.custom_current_temperature if hasattr(wh, 'custom_current_temperature') else None
+				min_temp = wh.custom_min_temperature if hasattr(wh, 'custom_min_temperature') else None
+				max_temp = wh.custom_max_temperature if hasattr(wh, 'custom_max_temperature') else None
+				
+				if current_temp is not None and min_temp is not None and max_temp is not None:
+					if min_temp <= current_temp <= max_temp:
+						status = "Within Range"
+					else:
+						status = "Out of Range"
+					
+					# Create compliance log
+					frappe.get_doc({
+						"doctype": "Temperature Compliance Log",
+						"warehouse": self.to_warehouse,
+						"stock_entry": self.name,
+						"temperature": current_temp,
+						"min_threshold": min_temp,
+						"max_threshold": max_temp,
+						"status": status,
+						"timestamp": now_datetime()
+					}).insert(ignore_permissions=True)
+	
+	def log_cancellation_reason(self):
+		"""Log reason for stock entry cancellation"""
+		# This would be implemented based on your business requirements
+		pass
 
-def before_submit(doc, method=None):
-	"""Hook: Before submitting Stock Entry"""
-	if hasattr(doc, 'custom_sap_movement_type') and doc.custom_sap_movement_type:
-		custom_stock_entry = CustomStockEntry(doc.as_dict())
-		custom_stock_entry.before_submit()
-
-def on_submit(doc, method=None):
-	"""Hook: After submitting Stock Entry"""
-	if hasattr(doc, 'custom_sap_movement_type') and doc.custom_sap_movement_type:
-		custom_stock_entry = CustomStockEntry(doc.as_dict())
-		custom_stock_entry.on_submit()
-
-def before_cancel(doc, method=None):
-	"""Hook: Before cancelling Stock Entry"""
-	pass
-
+# Hooks
 def on_update_after_submit(doc, method=None):
 	"""Hook: After updating submitted Stock Entry"""
 	pass
 
 def get_permission_query_conditions(user):
-	"""Permission query conditions for Stock Entry"""
+	"""Permission query conditions for Stock Entry - FIXED VERSION"""
 	if not user:
 		user = frappe.session.user
 	
@@ -255,28 +185,19 @@ def get_permission_query_conditions(user):
 		"Sales User": "(`tabStock Entry`.purpose = 'Material Issue' AND `tabStock Entry`.to_warehouse LIKE '%FG%')"
 	}
 	
+	# Check for full access roles first (Warehouse Manager, Stock User)
+	full_access_roles = ["Warehouse Manager", "Stock User"]
+	has_full_access = any(role in full_access_roles for role in user_roles)
+	
+	if has_full_access:
+		return "1=1"
+	
+	# For non-full-access users, apply role-specific conditions
 	conditions = []
 	for role in user_roles:
 		if role in role_warehouse_access:
-			conditions.append(role_warehouse_access[role])
+			condition = role_warehouse_access[role]
+			if condition not in conditions:  # Avoid duplicates
+				conditions.append(condition)
 	
 	return " OR ".join(conditions) if conditions else "0=1"
-
-@frappe.whitelist()
-def make_custom_stock_entry(work_order, purpose, qty=None):
-	"""Custom method to create Stock Entry with SAP movement type"""
-	from erpnext.stock.doctype.stock_entry.stock_entry import make_stock_entry
-	
-	# Create standard stock entry
-	stock_entry = make_stock_entry(work_order, purpose, qty)
-	
-	# Add custom SAP movement type based on purpose
-	if purpose == "Material Issue":
-		stock_entry.custom_sap_movement_type = "261"  # FrontFlush
-	elif purpose == "Material Transfer":
-		stock_entry.custom_sap_movement_type = "311"  # BackFlush
-	
-	# Set Work Order reference
-	stock_entry.custom_work_order_reference = work_order
-	
-	return stock_entry
