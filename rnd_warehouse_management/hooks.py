@@ -11,13 +11,11 @@ app_license = "MIT"
 
 required_apps = ["frappe", "erpnext"]
 
-# Additional Features
 has_website_permission = {
     "Warehouse": "rnd_warehouse_management.permissions.warehouse_query",
     "Stock Entry": "rnd_warehouse_management.permissions.stock_entry_query"
 }
 
-# Website Settings
 website_route_rules = [
     {"from_route": "/warehouse-dashboard", "to_route": "rnd_warehouse_management/dashboard"},
     {"from_route": "/gi-gt-slip/<path:name>", "to_route": "rnd_warehouse_management/print-gi-gt-slip"}
@@ -25,9 +23,11 @@ website_route_rules = [
 
 # Include JS and CSS
 app_include_css = ["/assets/rnd_warehouse_management/css/warehouse_management.css"]
-app_include_js = ["/assets/rnd_warehouse_management/js/warehouse_management.js"]
+app_include_js = [
+    "/assets/rnd_warehouse_management/js/warehouse_management.js",
+    "/assets/rnd_warehouse_management/js/warehouse_temperature.js"
+]
 
-# Website assets (not used but defined to prevent undefined errors)
 web_include_css = []
 web_include_js = []
 
@@ -35,7 +35,7 @@ web_include_js = []
 doctype_js = {
     "Stock Entry": "public/js/stock_entry.js",
     "Work Order": "public/js/work_order.js",
-    "Warehouse": "public/js/warehouse.js"
+    "Warehouse": "public/js/warehouse_temperature.js"
 }
 
 doctype_list_js = {
@@ -60,28 +60,26 @@ doc_events = {
     }
 }
 
-# Custom Field Installation
+# Fixtures
 fixtures = [
     {"dt": "Movement Type Master", "filters": [["Movement Type Master", "is_active", "=", 1]]},
     {"dt": "Stock Entry Approval Rule", "filters": [["Stock Entry Approval Rule", "enabled", "=", 1]]},
-    "Custom Field",
-    "Property Setter",
-    "Custom Script",
-    "Print Format",
-    "Letter Head",
-    "Workflow",
-    "Workflow State",
-    "Workflow Action Master",
-    "Role",
-    "Server Script"
+    {"dt": "Custom Field", "filters": [["dt", "in", ["Warehouse", "Stock Entry", "Work Order"]]]},
+    {"dt": "Property Setter"},
+    {"dt": "Custom Script"},
+    {"dt": "Print Format"},
+    {"dt": "Letter Head"},
+    {"dt": "Workflow"},
+    {"dt": "Workflow State"},
+    {"dt": "Workflow Action Master"},
+    {"dt": "Role"},
+    {"dt": "Server Script"}
 ]
 
-# Workflow Override
 override_whitelisted_methods = {
     "erpnext.stock.doctype.stock_entry.stock_entry.make_stock_entry": "rnd_warehouse_management.warehouse_management.stock_entry.make_custom_stock_entry"
 }
 
-# Scheduler Events (for background tasks)
 scheduler_events = {
     "hourly": [
         "rnd_warehouse_management.warehouse_management.tasks.update_zone_status"
@@ -92,20 +90,16 @@ scheduler_events = {
     ]
 }
 
-# Installation
 after_install = "rnd_warehouse_management.install.after_install"
 after_uninstall = "rnd_warehouse_management.uninstall.after_uninstall"
 
-# Boot session data
 boot_session = "rnd_warehouse_management.boot.boot_session"
 
-# Permission Query Functions
 permission_query_conditions = {
     "Stock Entry": "rnd_warehouse_management.warehouse_management.stock_entry.get_permission_query_conditions",
     "Work Order": "rnd_warehouse_management.warehouse_management.work_order.get_permission_query_conditions"
 }
 
-# Jinja Custom Methods - FIXED: Added warehouse_management to the path
 jinja = {
     "methods": [
         "rnd_warehouse_management.warehouse_management.utils.get_signature_image",
