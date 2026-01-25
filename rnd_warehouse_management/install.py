@@ -36,32 +36,36 @@ def create_default_movement_types():
     movement_types = [
         {
             "doctype": "Movement Type",
-            "movement_type_name": "Material Receipt",
+            "purpose": "Material Receipt",
             "movement_code": "101",
-            "requires_dual_signature": False,
-            "movement_description": "Goods receipt from vendor"
+            "movement_description": "Goods receipt from vendor",
+            "add_to_transit": 0,
+            "is_standard": 1
         },
         {
             "doctype": "Movement Type",
-            "movement_type_name": "Material Issue",
+            "purpose": "Material Issue",
             "movement_code": "261",
-            "requires_dual_signature": True,
-            "movement_description": "Issue materials to production"
+            "movement_description": "Issue materials to production",
+            "add_to_transit": 0,
+            "is_standard": 1
         },
         {
-            "doctype": "Movement Type", 
-            "movement_type_name": "Transfer Posting",
+            "doctype": "Movement Type",
+            "purpose": "Transfer Posting",
             "movement_code": "311",
-            "requires_dual_signature": True,
-            "movement_description": "Transfer between storage locations"
+            "movement_description": "Transfer between storage locations",
+            "add_to_transit": 1,
+            "is_standard": 1
         }
     ]
     
     created_count = 0
     for mt_data in movement_types:
-        if not frappe.db.exists("Movement Type", mt_data["movement_type_name"]):
-            # Add name field before creating document
-            mt_data['name'] = mt_data['movement_type_name'].replace(' ', '_').upper()
+        # Check if exists by purpose
+        if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
+            # Add name field
+            mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
             frappe.get_doc(mt_data).insert(ignore_permissions=True)
             created_count += 1
     
