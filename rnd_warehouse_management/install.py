@@ -32,27 +32,28 @@ def after_install():
 def create_default_movement_types():
     """Create default movement types if they don't exist"""
     print("📋 Setting up default movement types...")
-        movement_types = [
+    
+    movement_types = [
         {
             "doctype": "Movement Type",
             "movement_type_name": "Material Receipt",
-            "sap_movement_code": "101",
+            "movement_code": "101",
             "requires_dual_signature": False,
-            "description": "Goods receipt from vendor"
+            "movement_description": "Goods receipt from vendor"
         },
         {
             "doctype": "Movement Type",
             "movement_type_name": "Material Issue",
-            "sap_movement_code": "261",
+            "movement_code": "261",
             "requires_dual_signature": True,
-            "description": "Issue materials to production"
+            "movement_description": "Issue materials to production"
         },
         {
             "doctype": "Movement Type", 
             "movement_type_name": "Transfer Posting",
-            "sap_movement_code": "311",
+            "movement_code": "311",
             "requires_dual_signature": True,
-            "description": "Transfer between storage locations"
+            "movement_description": "Transfer between storage locations"
         }
     ]
     
