@@ -1,2 +1,0 @@
-# RND Warehouse Management
-frappe>=15.0.0
