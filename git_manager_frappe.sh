@@ -1,5 +1,5 @@
 #!/bin/bash
-# git_manager_frappe.sh - Optimized for Warehouse Management on Frappe Cloud
+# git_manager_fixed.sh - With improved SSH pattern matching
 
 set -euo pipefail
 
@@ -8,7 +8,7 @@ APP_NAME="rnd_warehouse_management"
 GITHUB_USER="rogerboy38"
 REPO_NAME="rnd_warehouse_management"
 REPO_URL="git@github.com:${GITHUB_USER}/${REPO_NAME}.git"
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.0.1"
 
 # Colors
 GREEN='\033[0;32m'
@@ -34,11 +34,29 @@ show_banner() {
     echo "════════════════════════════════════════════════════════"
 }
 
+# Improved SSH test with multiple patterns
+test_ssh_connection() {
+    local ssh_output
+    ssh_output=$(ssh -T git@github.com 2>&1)
+    
+    # Multiple success patterns for different SSH versions
+    if echo "$ssh_output" | grep -q -E \
+        "successfully authenticated|Hi ${GITHUB_USER}|authenticated successfully|You've successfully authenticated"; then
+        log_success "SSH connection verified"
+        echo "   Output: $ssh_output"
+        return 0
+    else
+        log_warning "SSH connection check failed"
+        echo "   Output: $ssh_output"
+        return 1
+    fi
+}
+
 frappe_health_check() {
     log_info "Frappe Cloud Health Check"
     
     # SSH Check
-    if ssh -T git@github.com 2>&1 | grep -q -E "authenticated|Hi ${GITHUB_USER}"; then
+    if test_ssh_connection; then
         log_success "SSH connection verified"
     else
         log_warning "SSH connection issues"
@@ -120,8 +138,8 @@ frappe_fix_ssh() {
         read -r
     fi
     
-    # Test
-    if ssh -T git@github.com 2>&1 | grep -q "authenticated"; then
+    # Test with improved function
+    if test_ssh_connection; then
         log_success "SSH is working"
     else
         log_error "SSH still not working"
