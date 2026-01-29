@@ -1,0 +1,133 @@
+{
+ "app": "rnd_warehouse_management",
+ "category": "Modules",
+ "charts": [],
+ "content": "[]",
+ "creation": "2026-01-29 15:40:49.590044",
+ "custom_blocks": [],
+ "developer_mode_only": 0,
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "warehouse",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "is_standard": 0,
+ "label": "Warehouse Management",
+ "link_type": "DocType",
+ "links": [
+  {
+   "hidden": 0,
+   "icon": "database",
+   "is_query_report": 0,
+   "label": "Masters",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Movement Type Master",
+   "link_count": 0,
+   "link_to": "Movement Type Master",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Entry Approval Rule",
+   "link_count": 0,
+   "link_to": "Stock Entry Approval Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "icon": "file",
+   "is_query_report": 0,
+   "label": "Transactions",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Entry Audit Log",
+   "link_count": 0,
+   "link_to": "Stock Entry Audit Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "icon": "chart-line",
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 0,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Audit Summary",
+   "link_count": 0,
+   "link_to": "Stock Entry Audit Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Stock Entry Audit Log",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Approval Rules",
+   "link_count": 0,
+   "link_to": "Approval Rules Overview",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Stock Entry Approval Rule",
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-01-29 15:40:49.644730",
+ "modified_by": "Administrator",
+ "module": "Warehouse Management",
+ "name": "Warehouse Management",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 21.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Stock Entry Audit Log",
+   "link_to": "Stock Entry Audit Log",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Movement Types",
+   "link_to": "Movement Type Master",
+   "type": "DocType"
+  }
+ ],
+ "title": "Warehouse Management",
+ "type": "Workspace"
+}
