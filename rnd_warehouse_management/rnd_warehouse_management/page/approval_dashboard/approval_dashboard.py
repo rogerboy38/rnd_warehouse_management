@@ -104,10 +104,10 @@ def get_my_approval_history(user, filters):
 	
 	# Add date filter
 	if filters.get("from_date"):
-		filter_conditions["event_timestamp"] = [">=", filters["from_date"] + " 00:00:00"]
+		filter_conditions["event_timestamp"] = [">=", str(filters["from_date"]) + " 00:00:00"]
 	
 	if filters.get("to_date"):
-		filter_conditions["event_timestamp"] = ["<=", filters["to_date"] + " 23:59:59"]
+		filter_conditions["event_timestamp"] = ["<=", str(filters["to_date"]) + " 23:59:59"]
 	
 	# Get audit logs
 	audit_logs = frappe.get_all(
@@ -159,7 +159,7 @@ def get_approval_statistics(user):
 		filters={
 			"user": user,
 			"event_type": "Approval Granted",
-			"event_timestamp": [">=", first_day_of_month + " 00:00:00"]
+                        "event_timestamp": [">=", str(first_day_of_month) + " 00:00:00"]
 		}
 	)
 	
@@ -169,7 +169,7 @@ def get_approval_statistics(user):
 		filters={
 			"user": user,
 			"event_type": "Approval Rejected",
-			"event_timestamp": [">=", first_day_of_month + " 00:00:00"]
+			"event_timestamp": [">=", str(first_day_of_month) + " 00:00:00"]
 		}
 	)
 	
@@ -180,7 +180,7 @@ def get_approval_statistics(user):
 		filters={
 			"custom_approval_status": ["like", "Pending%"],
 			"docstatus": 0,
-			"custom_approval_requested_on": ["<=", three_days_ago + " 23:59:59"]
+			"custom_approval_requested_on": ["<=", str(three_days_ago) + " 23:59:59"]
 		}
 	)
 	
