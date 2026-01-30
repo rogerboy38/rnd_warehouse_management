@@ -1,0 +1,25 @@
+[
+ {
+  "align": "Left",
+  "content": "<div style=\"width:100%; font-family:Helvetica, Arial, sans-serif; font-size:10pt; color:#333;\">\n  <table style=\"width:100%; border-bottom:2px solid #008080; padding-bottom:6px; margin-bottom:8px;\">\n    <tbody><tr>\n      <td style=\"width:35%; vertical-align:middle;\">\n        <img src=\"{{ letter_head_image }}\" style=\"max-height:60px;\">\n      </td>\n      <td style=\"width:65%; text-align:right; font-size:9pt;\">\n        <div style=\"font-size:11pt; font-weight:bold;\">AMB Wellness / Agromayal Botanica S.A. de C.V.</div>\n        <div>Calle Guanaceví No. 245, Parque Industrial Gómez Palacio</div>\n        <div>Gómez Palacio, Durango, México. C.P. 35078</div>\n        <div>Tel: +52 (871) 750-0846 · info@amb-wellness.com</div>\n        <div>RFC: ABO990323C41 · www.amb-wellness.com</div>\n      </td>\n    </tr>\n  </tbody></table>\n\n  <div style=\"text-align:right; font-size:8pt; color:#666;\" class=\"header-content\">\n    Envío de muestras – {{ frappe.utils.formatdate(frappe.utils.nowdate()) }}\n  </div>\n</div>",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Letter Head",
+  "footer": "<div style=\"width:100%; font-family:Helvetica, Arial, sans-serif; font-size:8pt; color:#555;\n            border-top:1px solid #008080; margin-top:10px; padding-top:4px;\">\n  <div style=\"float:left;\">\n    No para venta · Uso exclusivo como muestra.\n  </div>\n  <div style=\"float:right; text-align:right;\">\n    AMB Wellness · www.amb-wellness.com · info@amb-wellness.com\n  </div>\n  <div style=\"clear:both;\"></div>\n</div>",
+  "footer_align": "Left",
+  "footer_image": null,
+  "footer_image_height": 0.0,
+  "footer_image_width": 0.0,
+  "footer_script": null,
+  "footer_source": "HTML",
+  "header_script": null,
+  "image": null,
+  "image_height": 0.0,
+  "image_width": 0.0,
+  "is_default": 1,
+  "letter_head_name": "Envío de Muestras",
+  "modified": "2026-01-21 14:20:54.594977",
+  "name": "Envío de Muestras",
+  "source": "HTML"
+ }
+]

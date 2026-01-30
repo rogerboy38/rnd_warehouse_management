@@ -201,3 +201,50 @@ def get_permission_query_conditions(user):
 				conditions.append(condition)
 	
 	return " OR ".join(conditions) if conditions else "0=1"
+
+
+def can_approve(user, stock_entry):
+    """Check if user can approve the stock entry
+    
+    Args:
+        user: The user to check approval permission for
+        stock_entry: The stock entry document or name
+        
+    Returns:
+        bool: True if user can approve, False otherwise
+    """
+    if not user:
+        user = frappe.session.user
+    
+    if isinstance(stock_entry, str):
+        stock_entry = frappe.get_doc("Stock Entry", stock_entry)
+    
+    user_roles = frappe.get_roles(user)
+    
+    # System Manager can always approve
+    if "System Manager" in user_roles:
+        return True
+    
+    # Stock Manager can approve
+    if "Stock Manager" in user_roles:
+        return True
+    
+    # Warehouse Manager can approve
+    if "Warehouse Manager" in user_roles:
+        return True
+        
+    # Check approval rules if they exist
+    try:
+        approval_rules = frappe.get_all("Stock Entry Approval Rule",
+            filters={"enabled": 1},
+            fields=["approver_role", "movement_type"]
+        )
+        
+        for rule in approval_rules:
+            if rule.approver_role in user_roles:
+                if not rule.movement_type or rule.movement_type == stock_entry.get("custom_movement_type"):
+                    return True
+    except Exception:
+        pass
+    
+    return False

@@ -13,7 +13,7 @@ def update_zone_status():
 		
 		for wo in work_orders:
 			if wo.bom_no:
-				from rnd_warehouse_management.warehouse_management.work_order import update_work_order_zone_status
+				from rnd_warehouse_management.rnd_warehouse_management.work_order import update_work_order_zone_status
 				update_work_order_zone_status(wo.name)
 		
 		frappe.log(f"Updated zone status for {len(work_orders)} Work Orders")

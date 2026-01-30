@@ -45,18 +45,18 @@ doctype_list_js = {
 # DocType Event Hooks
 doc_events = {
     "Stock Entry": {
-        "before_save": "rnd_warehouse_management.warehouse_management.stock_entry.before_save",
-        "before_submit": "rnd_warehouse_management.warehouse_management.stock_entry.before_submit",
-        "on_submit": "rnd_warehouse_management.warehouse_management.stock_entry.on_submit",
-        "before_cancel": "rnd_warehouse_management.warehouse_management.stock_entry.before_cancel",
-        "on_update_after_submit": "rnd_warehouse_management.warehouse_management.stock_entry.on_update_after_submit"
+        "before_save": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_save",
+        "before_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_submit",
+        "on_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_submit",
+        "before_cancel": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_cancel",
+        "on_update_after_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_update_after_submit"
     },
     "Work Order": {
-        "before_save": "rnd_warehouse_management.warehouse_management.work_order.before_save",
-        "on_submit": "rnd_warehouse_management.warehouse_management.work_order.on_submit"
+        "before_save": "rnd_warehouse_management.rnd_warehouse_management.work_order.before_save",
+        "on_submit": "rnd_warehouse_management.rnd_warehouse_management.work_order.on_submit"
     },
     "Warehouse": {
-        "before_save": "rnd_warehouse_management.warehouse_management.warehouse.before_save"
+        "before_save": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_save"
     }
 }
 
@@ -66,27 +66,32 @@ fixtures = [
     {"dt": "Stock Entry Approval Rule", "filters": [["Stock Entry Approval Rule", "enabled", "=", 1]]},
     {"dt": "Custom Field", "filters": [["dt", "in", ["Warehouse", "Stock Entry", "Work Order"]]]},
     {"dt": "Property Setter"},
-    {"dt": "Custom Script"},
     {"dt": "Print Format"},
+    {"dt": "Custom Script"},
     {"dt": "Letter Head"},
     {"dt": "Workflow"},
     {"dt": "Workflow State"},
     {"dt": "Workflow Action Master"},
     {"dt": "Role"},
+    {"dt": "Custom Field",
+        "filters": [
+            ["dt", "in", ["Stock Entry", "Work Order", "Warehouse"]]
+        ]
+    },
     {"dt": "Server Script"}
 ]
 
 override_whitelisted_methods = {
-    "erpnext.stock.doctype.stock_entry.stock_entry.make_stock_entry": "rnd_warehouse_management.warehouse_management.stock_entry.make_custom_stock_entry"
+    "erpnext.stock.doctype.stock_entry.stock_entry.make_stock_entry": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.make_custom_stock_entry"
 }
 
 scheduler_events = {
     "hourly": [
-        "rnd_warehouse_management.warehouse_management.tasks.update_zone_status"
+        "rnd_warehouse_management.rnd_warehouse_management.tasks.update_zone_status"
     ],
     "daily": [
-        "rnd_warehouse_management.warehouse_management.tasks.cleanup_expired_signatures",
-        "rnd_warehouse_management.warehouse_management.tasks.generate_warehouse_reports",
+        "rnd_warehouse_management.rnd_warehouse_management.tasks.cleanup_expired_signatures",
+        "rnd_warehouse_management.rnd_warehouse_management.tasks.generate_warehouse_reports",
     ]
 }
 
@@ -96,14 +101,14 @@ after_uninstall = "rnd_warehouse_management.uninstall.after_uninstall"
 boot_session = "rnd_warehouse_management.boot.boot_session"
 
 permission_query_conditions = {
-    "Stock Entry": "rnd_warehouse_management.warehouse_management.stock_entry.get_permission_query_conditions",
-    "Work Order": "rnd_warehouse_management.warehouse_management.work_order.get_permission_query_conditions"
+    "Stock Entry": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.get_permission_query_conditions",
+    "Work Order": "rnd_warehouse_management.rnd_warehouse_management.work_order.get_permission_query_conditions"
 }
 
 jinja = {
     "methods": [
-        "rnd_warehouse_management.warehouse_management.utils.get_signature_image",
-        "rnd_warehouse_management.warehouse_management.utils.format_sap_movement_type",
-        "rnd_warehouse_management.warehouse_management.utils.get_zone_status_badge"
+        "rnd_warehouse_management.rnd_warehouse_management.utils.get_signature_image",
+        "rnd_warehouse_management.rnd_warehouse_management.utils.format_sap_movement_type",
+        "rnd_warehouse_management.rnd_warehouse_management.utils.get_zone_status_badge"
     ]
 }

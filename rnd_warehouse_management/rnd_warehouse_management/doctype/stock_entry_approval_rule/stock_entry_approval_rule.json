@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 0,
  "autoname": "format:APRL-{####}",
  "creation": "2025-10-20 07:22:13",
  "doctype": "DocType",
@@ -124,11 +123,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-20 07:22:13",
+ "modified": "2026-01-29 20:07:52.999604",
  "modified_by": "Administrator",
- "module": "Warehouse Management",
+ "module": "RND Warehouse Management",
  "name": "Stock Entry Approval Rule",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -165,6 +164,7 @@
    "share": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

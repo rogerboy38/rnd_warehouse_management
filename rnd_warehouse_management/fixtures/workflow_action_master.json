@@ -1,1 +1,79 @@
-[]
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-03 23:34:44.327322",
+  "name": "Reject",
+  "workflow_action_name": "Reject"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-16 18:08:06.278543",
+  "name": "Wait",
+  "workflow_action_name": "Wait"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-16 18:08:52.120441",
+  "name": "Cancel",
+  "workflow_action_name": "Cancel"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-17 19:41:00.815083",
+  "name": "Approve (Sales)",
+  "workflow_action_name": "Approve (Sales)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-17 20:32:54.298788",
+  "name": "Freeze",
+  "workflow_action_name": "Freeze"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-08-30 14:36:56.759154",
+  "name": "Start",
+  "workflow_action_name": "Start"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-08-24 19:53:39.488776",
+  "name": "Submit for Supervisor Approval",
+  "workflow_action_name": "Submit for Supervisor Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-17 19:39:19.114756",
+  "name": "Submit for Sales Approval",
+  "workflow_action_name": "Submit for Sales Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-03 23:34:44.324795",
+  "name": "Approve",
+  "workflow_action_name": "Approve"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-03 23:34:44.328702",
+  "name": "Review",
+  "workflow_action_name": "Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2025-07-17 20:16:12.959170",
+  "name": "Approve (Quality)",
+  "workflow_action_name": "Approve (Quality)"
+ }
+]

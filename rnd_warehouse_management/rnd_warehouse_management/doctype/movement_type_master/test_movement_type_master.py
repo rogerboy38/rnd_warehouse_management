@@ -45,7 +45,7 @@ class TestMovementTypeMaster(unittest.TestCase):
     
     def test_get_movement_type_details(self):
         """Test retrieving movement type details"""
-        from rnd_warehouse_management.warehouse_management.doctype.movement_type_master.movement_type_master import get_movement_type_details
+        from rnd_warehouse_management.rnd_warehouse_management.doctype.movement_type_master.movement_type_master import get_movement_type_details
         
         details = get_movement_type_details("TEST-001")
         self.assertIsNotNone(details)
@@ -53,7 +53,7 @@ class TestMovementTypeMaster(unittest.TestCase):
     
     def test_validate_movement_type(self):
         """Test movement type validation"""
-        from rnd_warehouse_management.warehouse_management.doctype.movement_type_master.movement_type_master import validate_movement_type_for_stock_entry
+        from rnd_warehouse_management.rnd_warehouse_management.doctype.movement_type_master.movement_type_master import validate_movement_type_for_stock_entry
         
         stock_entry_data = {
             "to_warehouse": "Test Warehouse"

@@ -37,7 +37,7 @@ frappe.ui.form.on('Stock Entry Audit Log', {
 
 function view_full_audit_trail(frm) {
 	frappe.call({
-		method: 'rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log.get_audit_trail',
+		method: 'rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log.get_audit_trail',
 		args: {
 			stock_entry: frm.doc.stock_entry
 		},

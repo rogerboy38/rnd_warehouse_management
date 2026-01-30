@@ -29,7 +29,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_create_audit_log(self):
 		"""Test creating an audit log entry"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
 		
 		log_name = create_audit_log(
 			stock_entry="TEST-SE-001",
@@ -46,7 +46,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_audit_log_with_field_changes(self):
 		"""Test audit log with field change tracking"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
 		
 		log_name = create_audit_log(
 			stock_entry="TEST-SE-001",
@@ -63,7 +63,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_audit_log_with_approval(self):
 		"""Test audit log with approval information"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
 		
 		log_name = create_audit_log(
 			stock_entry="TEST-SE-001",
@@ -80,7 +80,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_audit_log_with_additional_data(self):
 		"""Test audit log with additional JSON data"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log
 		
 		additional_data = {
 			"warehouse": "Main Warehouse",
@@ -104,7 +104,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_get_audit_trail(self):
 		"""Test retrieving audit trail"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log, get_audit_trail
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log, get_audit_trail
 		
 		# Create multiple audit logs
 		create_audit_log(stock_entry="TEST-SE-001", event_type="Created")
@@ -118,7 +118,7 @@ class TestStockEntryAuditLog(unittest.TestCase):
 	
 	def test_get_approval_history(self):
 		"""Test retrieving approval history"""
-		from rnd_warehouse_management.warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log, get_approval_history
+		from rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log import create_audit_log, get_approval_history
 		
 		# Create approval-related logs
 		create_audit_log(stock_entry="TEST-SE-001", event_type="Approval Requested", approval_level=1)

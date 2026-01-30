@@ -22,7 +22,7 @@ frappe.ui.form.on('Stock Entry Approval Rule', {
 		if (frm.doc.movement_type) {
 			// Load movement type details
 			frappe.call({
-				method: 'rnd_warehouse_management.warehouse_management.stock_entry.get_movement_type_details_for_ui',
+				method: 'rnd_warehouse_management.rnd_warehouse_management.stock_entry.get_movement_type_details_for_ui',
 				args: {
 					movement_code: frm.doc.movement_type
 				},
@@ -101,7 +101,7 @@ function test_conditional_logic(frm) {
 		let data = JSON.parse(sample_data);
 		
 		frappe.call({
-			method: 'rnd_warehouse_management.warehouse_management.doctype.stock_entry_approval_rule.stock_entry_approval_rule.evaluate_conditional_logic',
+			method: 'rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_approval_rule.stock_entry_approval_rule.evaluate_conditional_logic',
 			args: {
 				conditional_logic: frm.doc.conditional_logic,
 				stock_entry_data: data

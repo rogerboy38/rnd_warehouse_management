@@ -1,10 +1,8 @@
 {
  "actions": [],
- "allow_rename": 0,
  "autoname": "format:AUDIT-{#####}",
  "creation": "2025-10-20 07:22:13",
  "doctype": "DocType",
- "editable_grid": 0,
  "engine": "InnoDB",
  "field_order": [
   "section_break_1",
@@ -154,13 +152,12 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "is_submittable": 0,
  "links": [],
- "modified": "2025-10-20 07:22:13",
+ "modified": "2026-01-29 20:07:53.261006",
  "modified_by": "Administrator",
- "module": "Warehouse Management",
+ "module": "RND Warehouse Management",
  "name": "Stock Entry Audit Log",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -171,8 +168,7 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
-   "share": 1,
-   "write": 0
+   "share": 1
   },
   {
    "email": 1,
@@ -202,8 +198,8 @@
    "share": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "event_timestamp",
  "sort_order": "DESC",
- "states": [],
- "track_changes": 0
+ "states": []
 }

@@ -1,1 +1,416 @@
-[]
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:55.400020",
+  "name": "New Inquiry",
+  "style": "Warning",
+  "workflow_state_name": "New Inquiry"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:55.387522",
+  "name": "Needs Assessment",
+  "style": "Primary",
+  "workflow_state_name": "Needs Assessment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2025-07-16 18:23:55.374534",
+  "name": "Qualified Lead",
+  "style": "Success",
+  "workflow_state_name": "Qualified Lead"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2025-07-16 18:23:55.345541",
+  "name": "Disqualified",
+  "style": "Danger",
+  "workflow_state_name": "Disqualified"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2025-07-16 18:23:05.878686",
+  "name": "Claims Registration",
+  "style": "Danger",
+  "workflow_state_name": "Claims Registration"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.900308",
+  "name": "Claim Follow-up",
+  "style": "Warning",
+  "workflow_state_name": "Claim Follow-up"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.911152",
+  "name": "Internal Order Tracking",
+  "style": "Info",
+  "workflow_state_name": "Internal Order Tracking"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.921659",
+  "name": "Meeting Reminder",
+  "style": "Primary",
+  "workflow_state_name": "Meeting Reminder"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.932129",
+  "name": "Call Reminder",
+  "style": "Primary",
+  "workflow_state_name": "Call Reminder"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2025-07-16 18:23:05.942800",
+  "name": "Quotation Sent",
+  "style": "Success",
+  "workflow_state_name": "Quotation Sent"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.953543",
+  "name": "Quotation Follow-up",
+  "style": "Warning",
+  "workflow_state_name": "Quotation Follow-up"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2025-07-16 18:23:05.964131",
+  "name": "Dormant Client Follow-up",
+  "style": "Danger",
+  "workflow_state_name": "Dormant Client Follow-up"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.974421",
+  "name": "Sales Reports",
+  "style": "Info",
+  "workflow_state_name": "Sales Reports"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:05.984735",
+  "name": "Customer Pricing Reports",
+  "style": "Info",
+  "workflow_state_name": "Customer Pricing Reports"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2025-07-16 18:23:05.994886",
+  "name": "PO Received",
+  "style": "Success",
+  "workflow_state_name": "PO Received"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:06.005207",
+  "name": "Sales Order Created",
+  "style": "Info",
+  "workflow_state_name": "Sales Order Created"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:06.015695",
+  "name": "Quality Check",
+  "style": "Warning",
+  "workflow_state_name": "Quality Check"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:06.026102",
+  "name": "Production Stage",
+  "style": "Primary",
+  "workflow_state_name": "Production Stage"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:06.036432",
+  "name": "Shipping Stage",
+  "style": "Warning",
+  "workflow_state_name": "Shipping Stage"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2025-07-16 18:23:06.046863",
+  "name": "Order Shipped",
+  "style": "Success",
+  "workflow_state_name": "Order Shipped"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2025-07-16 18:23:06.057934",
+  "name": "Invoice Generated",
+  "style": "Success",
+  "workflow_state_name": "Invoice Generated"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2025-07-16 18:23:06.078762",
+  "name": "Certificate Renewal Reminder",
+  "style": "Danger",
+  "workflow_state_name": "Certificate Renewal Reminder"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-19 08:41:52.291504",
+  "name": "Pending Operator",
+  "style": "Info",
+  "workflow_state_name": "Pending Operator"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-19 08:42:44.865940",
+  "name": "Manual Approved",
+  "style": "Success",
+  "workflow_state_name": "Manual Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2022-08-03 11:53:40.731299",
+  "name": "Pending",
+  "style": "Warning",
+  "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2022-07-27 16:24:23.971985",
+  "name": "Approved",
+  "style": "Success",
+  "workflow_state_name": "Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "modified": "2022-07-27 16:24:23.975539",
+  "name": "Rejected",
+  "style": "Danger",
+  "workflow_state_name": "Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:51:31.636806",
+  "name": "In Progress",
+  "style": "Warning",
+  "workflow_state_name": "In Progress"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:48:41.856307",
+  "name": "Done",
+  "style": "Success",
+  "workflow_state_name": "Done"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:50:38.716280",
+  "name": "Revision",
+  "style": "Warning",
+  "workflow_state_name": "Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:55:59.368907",
+  "name": "Received",
+  "style": "Success",
+  "workflow_state_name": "Received"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:52:33.157092",
+  "name": "In Transit",
+  "style": "Inverse",
+  "workflow_state_name": "In Transit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:55:54.028632",
+  "name": "Delivered",
+  "style": "Success",
+  "workflow_state_name": "Delivered"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:55.412822",
+  "name": "Start",
+  "style": "Primary",
+  "workflow_state_name": "Start"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-19 08:42:23.511079",
+  "name": "Auto Approved",
+  "style": "Success",
+  "workflow_state_name": "Auto Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-07-17 19:30:21.899697",
+  "name": "Pending Sales",
+  "style": "Warning",
+  "workflow_state_name": "Pending Sales"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-25 17:49:46.435809",
+  "name": "Saved",
+  "style": "",
+  "workflow_state_name": "Saved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-30 14:36:43.526815",
+  "name": "Not Started",
+  "style": "",
+  "workflow_state_name": "Not Started"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2025-07-16 18:23:06.068378",
+  "name": "Certificate Shared",
+  "style": "Info",
+  "workflow_state_name": "Certificate Shared"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-07-17 19:30:56.033909",
+  "name": "Pending Quality",
+  "style": "Warning",
+  "workflow_state_name": "Pending Quality"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-07-17 19:32:08.493622",
+  "name": "Frozen",
+  "style": "Danger",
+  "workflow_state_name": "Frozen"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-07-17 19:31:26.288780",
+  "name": "Pending Director",
+  "style": "Warning",
+  "workflow_state_name": "Pending Director"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-19 08:41:23.749526",
+  "name": "Pending Supervisor",
+  "style": "Warning",
+  "workflow_state_name": "Pending Supervisor"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2025-08-24 19:46:19.699836",
+  "name": "Validated",
+  "style": "",
+  "workflow_state_name": "Validated"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-01-28 20:08:38.932899",
+  "name": "Warehouse Approval",
+  "style": "",
+  "workflow_state_name": "Warehouse Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2022-08-03 11:52:59.306193",
+  "name": "Draft",
+  "style": "Danger",
+  "workflow_state_name": "Draft"
+ }
+]

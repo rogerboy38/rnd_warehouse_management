@@ -78,7 +78,7 @@ function test_validation_rules(frm) {
     };
     
     frappe.call({
-        method: 'rnd_warehouse_management.warehouse_management.doctype.movement_type_master.movement_type_master.validate_movement_type_for_stock_entry',
+        method: 'rnd_warehouse_management.rnd_warehouse_management.doctype.movement_type_master.movement_type_master.validate_movement_type_for_stock_entry',
         args: {
             movement_code: frm.doc.movement_code,
             stock_entry_data: test_stock_entry

@@ -110,7 +110,7 @@ class ApprovalDashboard {
 	
 	load_data() {
 		frappe.call({
-			method: 'rnd_warehouse_management.warehouse_management.page.approval_dashboard.approval_dashboard.get_dashboard_data',
+			method: 'rnd_warehouse_management.rnd_warehouse_management.page.approval_dashboard.approval_dashboard.get_dashboard_data',
 			args: { filters: this.filters },
 			callback: (r) => {
 				if (r.message) {
@@ -331,7 +331,7 @@ class ApprovalDashboard {
 			primary_action_label: __('Approve'),
 			primary_action: function(values) {
 				frappe.call({
-					method: 'rnd_warehouse_management.warehouse_management.stock_entry.approve_stock_entry',
+					method: 'rnd_warehouse_management.rnd_warehouse_management.stock_entry.approve_stock_entry',
 					args: {
 						stock_entry_name: entry_name,
 						comments: values.comments
@@ -366,7 +366,7 @@ class ApprovalDashboard {
 			primary_action_label: __('Reject'),
 			primary_action: function(values) {
 				frappe.call({
-					method: 'rnd_warehouse_management.warehouse_management.stock_entry.reject_stock_entry',
+					method: 'rnd_warehouse_management.rnd_warehouse_management.stock_entry.reject_stock_entry',
 					args: {
 						stock_entry_name: entry_name,
 						rejection_reason: values.rejection_reason
@@ -402,7 +402,7 @@ class ApprovalDashboard {
 			__('Are you sure you want to approve {0} entries?', [selected.length]),
 			function() {
 				frappe.call({
-					method: 'rnd_warehouse_management.warehouse_management.page.approval_dashboard.approval_dashboard.bulk_approve',
+					method: 'rnd_warehouse_management.rnd_warehouse_management.page.approval_dashboard.approval_dashboard.bulk_approve',
 					args: {
 						stock_entry_names: selected,
 						comments: 'Bulk approved from dashboard'

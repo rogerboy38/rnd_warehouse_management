@@ -1,12 +1,16 @@
 import frappe
+import json
 from frappe import _
 from frappe.utils import nowdate, add_days, get_datetime
 
 @frappe.whitelist()
 def get_dashboard_data(filters=None):
 	"""Get approval dashboard data"""
+	if filters and isinstance(filters, str):
+		filters = json.loads(filters)
 	if not filters:
 		filters = {}
+
 	
 	user = frappe.session.user
 	user_roles = frappe.get_roles(user)
@@ -29,7 +33,7 @@ def get_dashboard_data(filters=None):
 
 def get_pending_approvals_for_dashboard(user, filters):
 	"""Get all pending approvals for the user"""
-	from rnd_warehouse_management.warehouse_management.stock_entry import can_approve
+	from rnd_warehouse_management.rnd_warehouse_management.stock_entry import can_approve
 	
 	# Build filter conditions
 	filter_conditions = {
@@ -203,7 +207,7 @@ def bulk_approve(stock_entry_names, comments=None):
 	for entry_name in stock_entry_names:
 		try:
 			frappe.call(
-				"rnd_warehouse_management.warehouse_management.stock_entry.approve_stock_entry",
+				"rnd_warehouse_management.rnd_warehouse_management.stock_entry.approve_stock_entry",
 				stock_entry_name=entry_name,
 				comments=comments
 			)
