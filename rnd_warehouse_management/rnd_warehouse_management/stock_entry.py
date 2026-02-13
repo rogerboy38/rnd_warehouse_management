@@ -274,3 +274,36 @@ def before_cancel(doc, method):
 def on_update_after_submit(doc, method):
     """Hook for on_update_after_submit event"""
     pass
+
+
+# Whitelisted API functions for UI
+@frappe.whitelist()
+def get_movement_type_details_for_ui(movement_type):
+    """Get movement type details for UI - called from stock_entry.js
+    
+    Args:
+        movement_type: The SAP Movement Type code (e.g., '561', '311')
+        
+    Returns:
+        dict: Movement type details including stock_entry_type, description, etc.
+    """
+    if not movement_type:
+        return {}
+    
+    try:
+        movement_doc = frappe.get_doc("SAP Movement Type", movement_type)
+        return {
+            "stock_entry_type": movement_doc.stock_entry_type or "",
+            "description": movement_doc.description or "",
+            "description_es": movement_doc.get("description_es") or movement_doc.description or "",
+            "requires_batch": movement_doc.get("requires_batch") or 0,
+            "requires_serial_no": movement_doc.get("requires_serial_no") or 0,
+            "requires_source_warehouse": movement_doc.get("requires_source_warehouse") or 0,
+            "requires_target_warehouse": movement_doc.get("requires_target_warehouse") or 0
+        }
+    except frappe.DoesNotExistError:
+        frappe.log_error(f"SAP Movement Type {movement_type} not found", "get_movement_type_details_for_ui")
+        return {}
+    except Exception as e:
+        frappe.log_error(f"Error getting movement type details: {str(e)}", "get_movement_type_details_for_ui")
+        return {}
