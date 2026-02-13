@@ -248,3 +248,29 @@ def can_approve(user, stock_entry):
         pass
     
     return False
+
+
+# Module-level functions for doc_events hooks in hooks.py
+# These wrapper functions are called by Frappe's doc_events system
+
+def before_save(doc, method):
+    """Hook for before_save event - called by hooks.py doc_events"""
+    # The CustomStockEntry class methods handle the actual logic
+    # This wrapper is needed because doc_events expects module-level functions
+    pass
+
+def before_submit(doc, method):
+    """Hook for before_submit event"""
+    pass
+
+def on_submit(doc, method):
+    """Hook for on_submit event"""
+    pass
+
+def before_cancel(doc, method):
+    """Hook for before_cancel event"""
+    pass
+
+def on_update_after_submit(doc, method):
+    """Hook for on_update_after_submit event"""
+    pass
