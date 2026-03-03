@@ -28,7 +28,7 @@ def update_material_requirements(doc):
 	bom_items = frappe.get_all(
 		"BOM Item",
 		filters={"parent": doc.bom_no},
-		fields=["item_code", "qty", "warehouse", "item_name"]
+		fields=["item_code", "qty", "source_warehouse", "item_name"]
 	)
 	
 	# Calculate total required vs available
