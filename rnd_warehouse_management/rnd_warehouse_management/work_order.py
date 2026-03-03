@@ -148,7 +148,7 @@ def get_work_order_material_status(work_order_name):
 		bom_items = frappe.get_all(
 			"BOM Item",
 			filters={"parent": work_order.bom_no},
-			fields=["item_code", "qty", "warehouse", "item_name", "description"]
+		fields=["item_code", "qty", "source_warehouse", "item_name", "description"]
 		)
 		
 		material_status = []
