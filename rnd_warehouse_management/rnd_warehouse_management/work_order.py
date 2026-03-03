@@ -38,7 +38,7 @@ def update_material_requirements(doc):
 	
 	for bom_item in bom_items:
 		required_qty = flt(bom_item.qty * doc.qty)
-		available_qty = get_available_qty(bom_item.item_code, bom_item.warehouse)
+		available_qty = get_available_qty(bom_item.item_code, bom_item.source_warehouse)
 		
 		if available_qty >= required_qty:
 			available_items += 1
@@ -50,7 +50,7 @@ def update_material_requirements(doc):
 				"required_qty": required_qty,
 				"available_qty": available_qty,
 				"missing_qty": missing_qty,
-				"warehouse": bom_item.warehouse
+				"warehouse": bom_item.source_warehouse
 			})
 	
 	# Update completion percentage
@@ -154,7 +154,7 @@ def get_work_order_material_status(work_order_name):
 		material_status = []
 		for bom_item in bom_items:
 			required_qty = flt(bom_item.qty * work_order.qty)
-			available_qty = get_available_qty(bom_item.item_code, bom_item.warehouse)
+			available_qty = get_available_qty(bom_item.item_code, bom_item.source_warehouse)
 			
 			material_status.append({
 				"item_code": bom_item.item_code,
@@ -163,7 +163,7 @@ def get_work_order_material_status(work_order_name):
 				"required_qty": required_qty,
 				"available_qty": available_qty,
 				"shortage": max(0, required_qty - available_qty),
-				"warehouse": bom_item.warehouse,
+				"warehouse": bom_item.source_warehouse,
 				"status": "Available" if available_qty >= required_qty else "Shortage"
 			})
 		
