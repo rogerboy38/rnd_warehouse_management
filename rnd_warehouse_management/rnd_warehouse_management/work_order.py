@@ -9,7 +9,7 @@ def before_save(doc, method=None):
 
 def on_submit(doc, method=None):
 	"""Hook: After submitting Work Order"""
-	create_initial_material_assessment(doc)
+    # DISABLED: 	create_initial_material_assessment(doc)
 
 def set_initial_zone_status(doc):
 	"""Set initial zone status for new Work Orders"""
