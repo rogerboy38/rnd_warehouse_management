@@ -1,8 +1,17 @@
-# raven_ai_agent/skills/warehouse.py
-# Warehouse Intelligence Skill for raven_ai_agent
-# Place this file in: raven_ai_agent/skills/warehouse.py
-# Register in skills __init__.py or skill registry
 
+# skills/warehouse.py - Phase 5.4: Warehouse Intelligence Skill for Raven
+"""Warehouse Intelligence Skill for raven_ai_agent.
+
+Exposes tools to the LLM for warehouse-related questions:
+1. get_item_stock_locations  - Where is item X?
+2. get_kardex               - Stock ledger / Kardex view
+3. get_oos_risk_list        - OOS now or at risk
+4. get_warehouse_status     - Dashboard for a warehouse
+5. get_work_order_zone_status - WO Red/Green zone + material readiness
+6. get_warehouses_by_type   - List warehouses by type
+7. get_zone_temperature_status - Zone temperature monitoring (Phase 5.3)
+8. track_batch              - Batch location tracking
+"""
 from __future__ import unicode_literals
 from typing import Any, Dict, List, Optional
 
@@ -10,32 +19,16 @@ import frappe
 
 
 class WarehouseSkill:
-    """
-    Warehouse Intelligence Skill for raven_ai_agent.
-
-    Exposes 6 tools to the LLM for answering warehouse-related questions:
-        1. get_item_stock_locations  - Where is item X?
-        2. get_kardex                - Stock ledger / Kardex view
-        3. get_oos_risk_list         - OOS now or at risk
-        4. get_warehouse_status      - Dashboard for a warehouse
-        5. get_work_order_zone_status - WO Red/Green zone + material readiness
-        6. get_warehouses_by_type    - List warehouses by type
-
-    Usage in agent:
-        skill = WarehouseSkill()
-        tools = skill.get_tools()          # pass to LLM function-calling
-        result = skill.call(tool_name, args)  # execute tool by name
-    """
-
     name = "warehouse"
     description = (
         "Answer questions about warehouses, inventory locations, stock movements, "
-        "out-of-stock risk, work order material readiness, and warehouse dashboards."
+        "out-of-stock risk, work order material readiness, zone temperature monitoring, "
+        "batch tracking, and warehouse dashboards."
     )
 
-    # ------------------------------------------------------------------
-    # Tool registry
-    # ------------------------------------------------------------------
+    # Module path prefix for API calls
+    _API = "rnd_warehouse_management.rnd_warehouse_management.warehouse"
+    _MON = "rnd_warehouse_management.rnd_warehouse_management.warehouse_monitoring"
 
     def get_tools(self) -> List[Dict[str, Any]]:
         """Return tool definitions in OpenAI function-calling format."""
@@ -43,17 +36,13 @@ class WarehouseSkill:
             {
                 "name": "get_item_stock_locations",
                 "description": (
-                    "Get the current stock qty for a specific item across ALL warehouses. "
-                    "Use this when the user asks 'where is item X', 'how much stock do we have "
-                    "for X', or 'in which warehouses is X available'."
+                    "Get current stock qty for an item across ALL warehouses. "
+                    "Use when user asks where is item X or stock levels."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "item_code": {
-                            "type": "string",
-                            "description": "ERPNext Item code (exact name).",
-                        }
+                        "item_code": {"type": "string", "description": "ERPNext Item code."}
                     },
                     "required": ["item_code"],
                 },
@@ -61,33 +50,17 @@ class WarehouseSkill:
             {
                 "name": "get_kardex",
                 "description": (
-                    "Get stock ledger entries (Kardex) for a warehouse and/or item within "
-                    "an optional date range. Use this when the user asks for movement history, "
-                    "Kardex, 'show me transactions for X', or 'what happened with stock in WH-01'."
+                    "Get stock ledger entries (Kardex) for warehouse/item/date range. "
+                    "Use for movement history or transaction queries."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "warehouse": {
-                            "type": "string",
-                            "description": "Warehouse name to filter by.",
-                        },
-                        "item_code": {
-                            "type": "string",
-                            "description": "Item code to filter by.",
-                        },
-                        "from_date": {
-                            "type": "string",
-                            "description": "Start date in YYYY-MM-DD format.",
-                        },
-                        "to_date": {
-                            "type": "string",
-                            "description": "End date in YYYY-MM-DD format.",
-                        },
-                        "limit": {
-                            "type": "integer",
-                            "description": "Max rows to return (default 500).",
-                        },
+                        "warehouse": {"type": "string", "description": "Warehouse name."},
+                        "item_code": {"type": "string", "description": "Item code."},
+                        "from_date": {"type": "string", "description": "Start date YYYY-MM-DD."},
+                        "to_date": {"type": "string", "description": "End date YYYY-MM-DD."},
+                        "limit": {"type": "integer", "description": "Max rows (default 500)."},
                     },
                     "required": [],
                 },
@@ -95,48 +68,27 @@ class WarehouseSkill:
             {
                 "name": "get_oos_risk_list",
                 "description": (
-                    "Get a list of items that are out of stock NOW or at risk of stockout soon. "
-                    "Use this when the user asks 'what is out of stock', 'which items should I "
-                    "replenish', 'OOS report', or 'at-risk items'. "
-                    "Returns OOS status: OOS | AT_RISK | BELOW_REORDER."
+                    "Get items that are OOS or at risk of stockout. "
+                    "Returns OOS | AT_RISK | BELOW_REORDER status."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "company": {
-                            "type": "string",
-                            "description": "ERPNext Company name.",
-                        },
-                        "warehouse": {
-                            "type": "string",
-                            "description": "Filter to a single warehouse (optional).",
-                        },
-                        "lookback_days": {
-                            "type": "integer",
-                            "description": "Days of history to estimate demand (default 90).",
-                        },
-                        "include_zero_demand": {
-                            "type": "boolean",
-                            "description": "Include items with no recent demand (default false).",
-                        },
+                        "company": {"type": "string", "description": "ERPNext Company."},
+                        "warehouse": {"type": "string", "description": "Filter to warehouse."},
+                        "lookback_days": {"type": "integer", "description": "Days of history (default 90)."},
+                        "include_zero_demand": {"type": "boolean", "description": "Include zero demand items."},
                     },
                     "required": ["company"],
                 },
             },
             {
                 "name": "get_warehouse_status",
-                "description": (
-                    "Get the dashboard/status for a specific warehouse: utilization, "
-                    "shortages, zone status. Use this when the user asks about a specific "
-                    "warehouse health, capacity, or overview."
-                ),
+                "description": "Get dashboard/status for a specific warehouse.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "warehouse": {
-                            "type": "string",
-                            "description": "Warehouse name.",
-                        }
+                        "warehouse": {"type": "string", "description": "Warehouse name."}
                     },
                     "required": ["warehouse"],
                 },
@@ -144,48 +96,55 @@ class WarehouseSkill:
             {
                 "name": "get_work_order_zone_status",
                 "description": (
-                    "Get the zone status (Red/Green) and material readiness for a Work Order. "
-                    "Use this when the user asks 'is WO-XXXX ready', 'which work orders are "
-                    "blocked', or 'what material is missing for production'."
+                    "Get zone status (Red/Green) and material readiness for a Work Order."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "work_order_name": {
-                            "type": "string",
-                            "description": "Work Order document name.",
-                        }
+                        "work_order_name": {"type": "string", "description": "Work Order name."}
                     },
                     "required": ["work_order_name"],
                 },
             },
             {
                 "name": "get_warehouses_by_type",
-                "description": (
-                    "List all warehouses for a company, optionally filtered by type "
-                    "(Raw Material, WIP, Finished Goods, Transit). Use this when the user "
-                    "asks 'list all warehouses', or needs to know which warehouses exist."
-                ),
+                "description": "List all warehouses for a company, optionally filtered by type.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "company": {
-                            "type": "string",
-                            "description": "ERPNext Company name.",
-                        },
-                        "warehouse_type": {
-                            "type": "string",
-                            "description": "Filter by type: Raw Material | WIP | Finished Goods | Transit.",
-                        },
+                        "company": {"type": "string", "description": "ERPNext Company."},
+                        "warehouse_type": {"type": "string", "description": "Filter by type."},
                     },
                     "required": ["company"],
                 },
             },
+            {
+                "name": "get_zone_temperature_status",
+                "description": (
+                    "Get temperature status for all monitored warehouse zones. "
+                    "Shows current temp, target, status (Normal/Warning/Critical)."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                },
+            },
+            {
+                "name": "track_batch",
+                "description": (
+                    "Find where a batch is located across warehouses. "
+                    "Use when user asks where is batch X or batch location."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "batch_id": {"type": "string", "description": "Batch name/ID."}
+                    },
+                    "required": ["batch_id"],
+                },
+            },
         ]
-
-    # ------------------------------------------------------------------
-    # Dispatcher
-    # ------------------------------------------------------------------
 
     def call(self, tool_name: str, args: Dict[str, Any]) -> Any:
         """Dispatch a tool call by name."""
@@ -196,6 +155,8 @@ class WarehouseSkill:
             "get_warehouse_status": self.get_warehouse_status,
             "get_work_order_zone_status": self.get_work_order_zone_status,
             "get_warehouses_by_type": self.get_warehouses_by_type,
+            "get_zone_temperature_status": self.get_zone_temperature_status,
+            "track_batch": self.track_batch,
         }
         fn = dispatch.get(tool_name)
         if not fn:
@@ -206,106 +167,119 @@ class WarehouseSkill:
             frappe.log_error(frappe.get_traceback(), f"WarehouseSkill.{tool_name}")
             return {"error": str(e)}
 
-    # ------------------------------------------------------------------
-    # Tool implementations
-    # ------------------------------------------------------------------
+    # --- Tool implementations ---
 
-    def get_item_stock_locations(
-        self,
-        item_code: str,
-    ) -> List[Dict]:
-        """Where is item X across all warehouses?"""
+    def get_item_stock_locations(self, item_code: str) -> List[Dict]:
         return frappe.call(
-            "rnd_warehouse_management.api.warehouse.get_item_stock_locations",
-            item_code=item_code,
+            f"{self._API}.get_item_stock_locations", item_code=item_code
         )
 
-    def get_kardex(
-        self,
-        warehouse: Optional[str] = None,
-        item_code: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
-        limit: int = 500,
-    ) -> List[Dict]:
-        """Stock ledger / Kardex for a warehouse, item, and/or date range."""
+    def get_kardex(self, warehouse=None, item_code=None, from_date=None, to_date=None, limit=500):
         return frappe.call(
-            "rnd_warehouse_management.api.warehouse.get_kardex",
-            warehouse=warehouse,
-            item_code=item_code,
-            from_date=from_date,
-            to_date=to_date,
-            limit=limit,
+            f"{self._API}.get_kardex",
+            warehouse=warehouse, item_code=item_code,
+            from_date=from_date, to_date=to_date, limit=limit,
         )
 
-    def get_oos_risk_list(
-        self,
-        company: str,
-        warehouse: Optional[str] = None,
-        lookback_days: int = 90,
-        include_zero_demand: bool = False,
-    ) -> List[Dict]:
-        """Items OOS now or at risk of stockout."""
+    def get_oos_risk_list(self, company, warehouse=None, lookback_days=90, include_zero_demand=False):
         return frappe.call(
-            "rnd_warehouse_management.api.warehouse.get_oos_risk_list",
-            company=company,
-            warehouse=warehouse,
-            lookback_days=lookback_days,
-            include_zero_demand=include_zero_demand,
+            f"{self._API}.get_oos_risk_list",
+            company=company, warehouse=warehouse,
+            lookback_days=lookback_days, include_zero_demand=include_zero_demand,
         )
 
-    def get_warehouse_status(
-        self,
-        warehouse: str,
-    ) -> Dict:
-        """Dashboard/status for a specific warehouse."""
+    def get_warehouse_status(self, warehouse: str) -> Dict:
         return frappe.call(
-            "rnd_warehouse_management.api.warehouse.get_warehouse_dashboard_data",
-            warehouse=warehouse,
+            f"{self._API}.get_warehouse_dashboard_data", warehouse=warehouse
         )
 
-    def get_work_order_zone_status(
-        self,
-        work_order_name: str,
-    ) -> Dict:
-        """Zone status (Red/Green) + material readiness for a Work Order."""
-        zone = frappe.call(
-            "rnd_warehouse_management.api.work_order.get_work_order_zone_status",
-            work_order_name=work_order_name,
+    def get_work_order_zone_status(self, work_order_name: str) -> Dict:
+        """Get zone status and material readiness for a Work Order."""
+        try:
+            wo = frappe.get_doc("Work Order", work_order_name)
+            # Determine zone based on warehouse
+            wip_warehouse = wo.wip_warehouse
+            zone_status = "Green"  # Default
+            
+            # Check material availability
+            material_status = []
+            for item in wo.required_items:
+                bin_data = frappe.db.get_value(
+                    "Bin",
+                    {"item_code": item.item_code, "warehouse": item.source_warehouse or wip_warehouse},
+                    ["actual_qty", "reserved_qty"],
+                    as_dict=True
+                ) or {"actual_qty": 0, "reserved_qty": 0}
+                
+                available = (bin_data.get("actual_qty") or 0) - (bin_data.get("reserved_qty") or 0)
+                required = item.required_qty - item.transferred_qty
+                is_short = available < required
+                
+                if is_short:
+                    zone_status = "Red"
+                
+                material_status.append({
+                    "item_code": item.item_code,
+                    "required_qty": required,
+                    "available_qty": available,
+                    "is_short": is_short
+                })
+            
+            return {
+                "work_order": work_order_name,
+                "status": wo.status,
+                "zone_status": zone_status,
+                "wip_warehouse": wip_warehouse,
+                "material_status": material_status,
+                "qty_to_produce": wo.qty,
+                "produced_qty": wo.produced_qty
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def get_warehouses_by_type(self, company, warehouse_type=None):
+        return frappe.call(
+            f"{self._API}.get_warehouses_by_type",
+            company=company, warehouse_type=warehouse_type,
         )
-        material = frappe.call(
-            "rnd_warehouse_management.api.work_order.get_work_order_material_status",
-            work_order_name=work_order_name,
+
+    def get_zone_temperature_status(self) -> List[Dict]:
+        """Get temperature status for all monitored zones."""
+        return frappe.call(f"{self._API}.get_zone_temperature_status")
+
+    def track_batch(self, batch_id: str) -> Dict:
+        """Find batch location across warehouses."""
+        # Get batch info
+        batch = frappe.db.get_value(
+            "Batch", batch_id,
+            ["name", "item", "batch_qty", "expiry_date", "manufacturing_date"],
+            as_dict=True
         )
+        if not batch:
+            return {"error": f"Batch {batch_id} not found"}
+        
+        # Get stock locations for this batch
+        locations = frappe.db.sql("""
+            SELECT warehouse, SUM(actual_qty) as qty
+            FROM `tabStock Ledger Entry`
+            WHERE batch_no = %s AND is_cancelled = 0
+            GROUP BY warehouse
+            HAVING SUM(actual_qty) > 0
+            ORDER BY qty DESC
+        """, batch_id, as_dict=True)
+        
         return {
-            "work_order": work_order_name,
-            "zone_status": zone,
-            "material_status": material,
+            "batch_id": batch.name,
+            "item": batch.item,
+            "batch_qty": batch.batch_qty,
+            "expiry_date": str(batch.expiry_date) if batch.expiry_date else None,
+            "manufacturing_date": str(batch.manufacturing_date) if batch.manufacturing_date else None,
+            "locations": locations,
+            "total_qty": sum(l.qty for l in locations)
         }
 
-    def get_warehouses_by_type(
-        self,
-        company: str,
-        warehouse_type: Optional[str] = None,
-    ) -> List[Dict]:
-        """List warehouses for a company, optionally filtered by type."""
-        return frappe.call(
-            "rnd_warehouse_management.api.warehouse.get_warehouses_by_type",
-            company=company,
-            warehouse_type=warehouse_type,
-        )
-
-
-# ------------------------------------------------------------------
-# Registration helper - call this from skills __init__.py
-# ------------------------------------------------------------------
 
 def register_skill(registry: dict) -> None:
-    """Register WarehouseSkill in the agent skill registry.
-
-    In skills/__init__.py or skill_loader.py add:
-        from raven_ai_agent.skills.warehouse import register_skill
-        register_skill(SKILL_REGISTRY)
-    """
+    """Register WarehouseSkill in the agent skill registry."""
     skill = WarehouseSkill()
     registry[skill.name] = skill
