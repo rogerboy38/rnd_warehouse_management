@@ -205,3 +205,110 @@ def configure_zone(warehouse, zone_type):
     wh.custom_temperature_spec_display = calculate_temperature_spec_display(wh)
     wh.save(ignore_permissions=True)
     return {"warehouse": warehouse, "zone_type": zone_type, "configured": True}
+
+# =============================================================================
+# Function aliases and scheduler entry points (Phase 5.3 compatibility)
+# =============================================================================
+
+def evaluate_temperature(current_temp=None, min_temp=None, max_temp=None, target_temp=None):
+    """Evaluate temperature and return status dict. Wrapper around evaluate_temperature_status."""
+    if current_temp is None:
+        return {"status": "Unknown", "in_range": False, "deviation": 0}
+    
+    from frappe.utils import flt
+    current = flt(current_temp)
+    t_min = flt(min_temp) if min_temp else 0
+    t_max = flt(max_temp) if max_temp else 100
+    t_target = flt(target_temp) if target_temp else (t_min + t_max) / 2
+    
+    deviation = 0
+    if current < t_min:
+        deviation = t_min - current
+    elif current > t_max:
+        deviation = current - t_max
+    
+    alert_offset = 2.0
+    critical_offset = 5.0
+    
+    if t_min <= current <= t_max:
+        status = "Normal"
+        in_range = True
+    elif deviation <= alert_offset:
+        status = "Warning"
+        in_range = False
+    else:
+        status = "Critical"
+        in_range = False
+    
+    return {
+        "status": status,
+        "in_range": in_range,
+        "deviation": round(deviation, 2),
+        "current_temp": current,
+        "target_temp": t_target,
+        "min_temp": t_min,
+        "max_temp": t_max
+    }
+
+
+def run_temperature_monitoring():
+    """Scheduler entry point - runs every 5 minutes via hooks.py cron."""
+    try:
+        check_temperature_alerts()
+    except Exception as e:
+        frappe.log_error(f"Temperature monitoring error: {str(e)}", "Temperature Monitor")
+
+
+def process_iot_reading(reading_data):
+    """Process an IoT sensor reading and update warehouse temperature."""
+    warehouse = reading_data.get("warehouse")
+    temperature = reading_data.get("temperature")
+    if not warehouse or temperature is None:
+        return {"status": "error", "message": "Missing warehouse or temperature"}
+    
+    try:
+        frappe.db.set_value("Warehouse", warehouse, {
+            "custom_current_temperature": float(temperature),
+            "custom_last_temperature_check": frappe.utils.now_datetime()
+        })
+        frappe.db.commit()
+        
+        result = evaluate_temperature(
+            current_temp=float(temperature),
+            min_temp=frappe.db.get_value("Warehouse", warehouse, "custom_min_temperature"),
+            max_temp=frappe.db.get_value("Warehouse", warehouse, "custom_max_temperature"),
+            target_temp=frappe.db.get_value("Warehouse", warehouse, "custom_target_temperature")
+        )
+        result["status"] = "success"
+        result["warehouse"] = warehouse
+        return result
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+def check_and_alert(warehouse_name):
+    """Check temperature for a specific warehouse and create alert if needed."""
+    doc = frappe.db.get_value(
+        "Warehouse", warehouse_name,
+        ["custom_current_temperature", "custom_min_temperature",
+         "custom_max_temperature", "custom_target_temperature"],
+        as_dict=True
+    )
+    if not doc:
+        return None
+    
+    result = evaluate_temperature(
+        current_temp=doc.custom_current_temperature,
+        min_temp=doc.custom_min_temperature,
+        max_temp=doc.custom_max_temperature,
+        target_temp=doc.custom_target_temperature
+    )
+    
+    if result["status"] in ("Warning", "Critical"):
+        frappe.log_error(
+            f"Temperature alert for {warehouse_name}: {result["status"]} - "
+            f"Current: {doc.custom_current_temperature}, Range: {doc.custom_min_temperature}-{doc.custom_max_temperature}",
+            f"Temperature {result["status"]}: {warehouse_name}"
+        )
+    
+    return result

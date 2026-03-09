@@ -80,11 +80,12 @@ def test_qi_automation_loads():
     assert hasattr(qi_automation, "create_non_conformity_on_qi_failure")
 
 def test_nc_creation_hook():
-    # Verify hook is registered in doc_events
-    from rnd_warehouse_management.rnd_warehouse_management import hooks
-    content = open(hooks.__file__).read() if hasattr(hooks, "__file__") else ""
-    # Alternative: check hooks module
-    assert True  # Hook verified during 5.2 deployment
+    # Verify hook is registered in doc_events via hooks.py file
+    hooks_path = frappe.get_app_path('rnd_warehouse_management', 'hooks.py')
+    with open(hooks_path) as f:
+        content = f.read()
+    assert 'create_non_conformity_on_qi_failure' in content, 'NC hook not in hooks.py'
+
 
 
 # --- 5.3 Tests ---
