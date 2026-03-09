@@ -526,3 +526,93 @@ def get_warehouses_by_type(company, warehouse_type=None):
     )
 
 
+
+
+# =============================================================================
+# Phase 5.3: Zone Management & Temperature Monitoring Functions
+# =============================================================================
+
+@frappe.whitelist()
+def get_zone_temperature_status(warehouse=None):
+    """Get temperature status for monitored warehouses."""
+    from rnd_warehouse_management.rnd_warehouse_management.warehouse_monitoring import (
+        get_zone_warehouses, evaluate_temperature
+    )
+    warehouses = get_zone_warehouses()
+    results = []
+    for wh in warehouses:
+        temp_eval = evaluate_temperature(
+            current_temp=wh.get("custom_current_temperature"),
+            min_temp=wh.get("custom_min_temperature"),
+            max_temp=wh.get("custom_max_temperature"),
+            target_temp=wh.get("custom_target_temperature")
+        )
+        results.append({
+            "warehouse": wh.name,
+            "warehouse_name": wh.warehouse_name,
+            "zone_type": wh.get("custom_zone_type"),
+            "current_temperature": wh.get("custom_current_temperature"),
+            "target_temperature": wh.get("custom_target_temperature"),
+            "status": temp_eval.get("status", "Unknown"),
+            "deviation": temp_eval.get("deviation", 0),
+            "requires_monitoring": wh.get("custom_requires_monitoring", 0)
+        })
+    return results
+
+
+@frappe.whitelist()
+def assign_warehouse_zone(warehouse, zone_type):
+    """Assign a zone type to a warehouse and set default temperature ranges."""
+    from rnd_warehouse_management.rnd_warehouse_management.warehouse_monitoring import ZONE_DEFAULTS
+    
+    if zone_type not in ZONE_DEFAULTS:
+        frappe.throw(_("Invalid zone type: {0}. Valid types: {1}").format(
+            zone_type, ", ".join(ZONE_DEFAULTS.keys())
+        ))
+    
+    doc = frappe.get_doc("Warehouse", warehouse)
+    defaults = ZONE_DEFAULTS[zone_type]
+    
+    doc.custom_zone_type = zone_type
+    doc.custom_is_zone_warehouse = 1
+    doc.custom_temperature_controlled = 1
+    doc.custom_min_temperature = defaults["temp_min"]
+    doc.custom_max_temperature = defaults["temp_max"]
+    
+    if not doc.custom_target_temperature:
+        doc.custom_target_temperature = (defaults["temp_min"] + defaults["temp_max"]) / 2
+    
+    doc.custom_requires_monitoring = 1
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    return {
+        "status": "success",
+        "message": f"Warehouse {warehouse} assigned to zone {zone_type}",
+        "defaults_applied": defaults
+    }
+
+
+@frappe.whitelist()
+def update_warehouse_temperature(warehouse, temperature, source="manual"):
+    """Update current temperature for a warehouse (manual or IoT)."""
+    from frappe.utils import now_datetime
+    
+    doc = frappe.get_doc("Warehouse", warehouse)
+    doc.custom_current_temperature = float(temperature)
+    doc.custom_last_temperature_check = now_datetime()
+    doc.custom_temperature_source = source
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    # Evaluate and return status
+    from rnd_warehouse_management.rnd_warehouse_management.warehouse_monitoring import evaluate_temperature
+    result = evaluate_temperature(
+        current_temp=float(temperature),
+        min_temp=doc.custom_min_temperature,
+        max_temp=doc.custom_max_temperature,
+        target_temp=doc.custom_target_temperature
+    )
+    result["warehouse"] = warehouse
+    result["timestamp"] = str(now_datetime())
+    return result

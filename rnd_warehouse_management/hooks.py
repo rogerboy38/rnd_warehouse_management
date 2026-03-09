@@ -89,6 +89,11 @@ override_whitelisted_methods = {
 }
 
 scheduler_events = {
+    "cron": {
+        "*/5 * * * *": [
+            "rnd_warehouse_management.rnd_warehouse_management.warehouse_monitoring.run_temperature_monitoring"
+        ]
+    },
     "hourly": [
         "rnd_warehouse_management.rnd_warehouse_management.tasks.update_zone_status"
     ],
