@@ -264,8 +264,9 @@ def before_submit(doc, method):
     pass
 
 def on_submit(doc, method):
-    """Hook for on_submit event"""
-    pass
+    """Hook for on_submit event - Phase 5.2: Auto-create QI on Manufacture"""
+    from rnd_warehouse_management.rnd_warehouse_management.qi_automation import create_quality_inspection_on_manufacture
+    create_quality_inspection_on_manufacture(doc, method)
 
 def before_cancel(doc, method):
     """Hook for before_cancel event"""

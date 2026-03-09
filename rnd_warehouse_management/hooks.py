@@ -57,6 +57,9 @@ doc_events = {
     },
     "Warehouse": {
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_save"
+    },
+    "Quality Inspection": {
+        "on_submit": "rnd_warehouse_management.rnd_warehouse_management.qi_automation.create_non_conformity_on_qi_failure"
     }
 }
 
