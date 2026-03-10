@@ -1,0 +1,133 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "autoname": "field:sensor_type",
+    "creation": "2026-03-09 21:00:00",
+    "doctype": "DocType",
+    "editable_grid": 1,
+    "engine": "InnoDB",
+    "field_order": [
+        "sensor_type",
+        "version",
+        "column_break_3",
+        "min_value",
+        "max_value",
+        "section_break_6",
+        "arduino_sketch",
+        "section_break_9",
+        "python_config",
+        "section_break_12",
+        "wiring_instructions",
+        "section_break_15",
+        "calibration_procedure"
+    ],
+    "fields": [
+        {
+            "fieldname": "sensor_type",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Sensor Type",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "version",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Version"
+        },
+        {
+            "fieldname": "column_break_3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "min_value",
+            "fieldtype": "Float",
+            "label": "Min Value"
+        },
+        {
+            "fieldname": "max_value",
+            "fieldtype": "Float",
+            "label": "Max Value"
+        },
+        {
+            "fieldname": "section_break_6",
+            "fieldtype": "Section Break",
+            "label": "Arduino Sketch"
+        },
+        {
+            "fieldname": "arduino_sketch",
+            "fieldtype": "Code",
+            "label": "Arduino Sketch",
+            "options": "C"
+        },
+        {
+            "fieldname": "section_break_9",
+            "fieldtype": "Section Break",
+            "label": "Python Configuration"
+        },
+        {
+            "fieldname": "python_config",
+            "fieldtype": "Code",
+            "label": "Python Config",
+            "options": "Python"
+        },
+        {
+            "fieldname": "section_break_12",
+            "fieldtype": "Section Break",
+            "label": "Wiring & Calibration"
+        },
+        {
+            "fieldname": "wiring_instructions",
+            "fieldtype": "Small Text",
+            "label": "Wiring Instructions"
+        },
+        {
+            "fieldname": "section_break_15",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "calibration_procedure",
+            "fieldtype": "Small Text",
+            "label": "Calibration Procedure"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-03-09 21:00:00",
+    "modified_by": "Administrator",
+    "module": "Raven AI Agent",
+    "name": "Sensor Skill",
+    "naming_rule": "By fieldname",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "Stock Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "quick_entry": 1,
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}
