@@ -7,42 +7,78 @@
 
 A professional warehouse management system for ERPNext with SAP-style movement types, dual-signature workflows, and comprehensive Red/Green zone logic for efficient material handling and production planning.
 
+## Current Status
+
+**Latest Update:** March 2026
+**Production Deployment:** Active on https://erp.sysmayal2.cloud
+
+### Recent Activity
+
+| Date | Changes |
+|------|---------|
+| 2026-03-09 | Latest code pulled from GitHub |
+| 2026-02 | Integration with Quality Management System |
+| 2026-01 | Dual-signature workflow enhancements |
+
 ## 🎆 Features
 
 ### 🏢 SAP Movement Type Integration
+
 - **261 (FrontFlush)**: Goods Issue for Production with warehouse supervisor approval
 - **311 (BackFlush)**: Transfer for Kitting with dual-signature approval workflow
 - Automated warehouse type validation and material flow control
 
 ### ✍️ Dual-Signature Approval Workflow
+
 - **Warehouse Supervisor**: First-level approval for all material movements
 - **Kitting Supervisor**: Second-level approval for SAP 311 movements
 - Digital signature capture with timestamp tracking
 - Role-based permissions and workflow state management
 
 ### 🟢🔴 Red/Green Zone Logic
+
 - **Red Zone**: Incomplete material availability - Work Orders cannot proceed
 - **Green Zone**: All materials available - Work Orders ready for production
 - Real-time material completion percentage calculation
 - Automated zone status updates based on stock availability
 
 ### 📜 GI/GT Slip Generation
+
 - Professional print format with signature display
 - Automated slip numbering and generation
 - Email integration for slip distribution
 - Mobile-responsive design for field operations
 
 ### 🏦 Advanced Warehouse Management
+
 - **Warehouse Types**: Raw Material, Work In Progress, Finished Goods, Transit, Rejected
 - **Transit Warehouses**: Virtual tracking for materials in movement
 - **Temperature Control**: Optional temperature monitoring for sensitive materials
 - **Capacity Management**: Warehouse utilization tracking and alerts
 
 ### 📊 Reporting & Analytics
+
 - Daily warehouse utilization reports
 - Material shortage analysis
 - Zone status trending
 - Approval workflow metrics
+
+### 🔗 Integration with Other Systems
+
+This module integrates with the broader AMB-Wellness ERPNext ecosystem:
+
+| Module | Integration Type |
+|--------|-----------------|
+| **amb_w_tds** | Batch/Serial tracking for materials |
+| **raven_ai_agent** | AI commands for warehouse queries |
+| **Quality Management** | Non-conformance linked to stock movements |
+
+**Example Raven Commands:**
+```
+@ai warehouse status
+@ai check zone for WO-2026-001
+@ai stock balance AMB-Material-001
+```
 
 ## 🚀 Quick Start
 
@@ -372,7 +408,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📧 Support
 
 For support, please contact:
-- **Email**: support@minimax.com
+- **Raven Channel**: @ai warehouse help
 - **GitHub Issues**: [Create an issue](https://github.com/minimax/rnd_warehouse_management/issues)
 - **Documentation**: [Wiki](https://github.com/minimax/rnd_warehouse_management/wiki)
 
@@ -395,6 +431,8 @@ For support, please contact:
 
 - [ERPNext](https://github.com/frappe/erpnext) - The main ERP system
 - [Frappe Framework](https://github.com/frappe/frappe) - The underlying framework
+- [amb_w_tds](https://github.com/rogerboy38/amb_w_tds) - TDS/COA Management
+- [raven_ai_agent](https://github.com/your-repo/raven_ai_agent) - AI Agent Integration
 
 ## 📊 Statistics
 
