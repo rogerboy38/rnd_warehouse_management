@@ -11,6 +11,11 @@ app_license = "MIT"
 
 required_apps = ["frappe", "erpnext"]
 
+# Override Workspace to prevent orphan deletion during bench migrate
+override_doctype_class = {
+    "Workspace": "rnd_warehouse_management.rnd_warehouse_management.workspace_protector.WorkspaceProtector"
+}
+
 has_website_permission = {
     "Warehouse": "rnd_warehouse_management.permissions.warehouse_query",
     "Stock Entry": "rnd_warehouse_management.permissions.stock_entry_query"
@@ -65,13 +70,8 @@ doc_events = {
 
 # Fixtures
 fixtures = [
-    # Protect standard ERPNext workspaces from orphan deletion
-    {
-        "doctype": "Workspace",
-        "filters": [
-            ["name", "in", ["Home", "Welcome Workspace", "Build", "Financial Reports", "CRM", "Users", "Settings", "Accounting", "Stock", "Buying", "Selling", "Manufacturing"]]
-        ]
-    },
+    # Protect standard ERPNext workspaces from orphan deletion using override
+    # Note: Workspace fixture alone doesn't prevent orphan deletion, using override_doctype_class below instead
     {"dt": "Movement Type Master", "filters": [["Movement Type Master", "is_active", "=", 1]]},
     {"dt": "Stock Entry Approval Rule", "filters": [["Stock Entry Approval Rule", "enabled", "=", 1]]},
     {"dt": "Custom Field", "filters": [["dt", "in", ["Warehouse", "Stock Entry", "Work Order"]]]},
