@@ -65,6 +65,13 @@ doc_events = {
 
 # Fixtures
 fixtures = [
+    # Protect standard ERPNext workspaces from orphan deletion
+    {
+        "doctype": "Workspace",
+        "filters": [
+            ["name", "in", ["Home", "Welcome Workspace", "Build", "Financial Reports", "CRM", "Users", "Settings", "Accounting", "Stock", "Buying", "Selling", "Manufacturing"]]
+        ]
+    },
     {"dt": "Movement Type Master", "filters": [["Movement Type Master", "is_active", "=", 1]]},
     {"dt": "Stock Entry Approval Rule", "filters": [["Stock Entry Approval Rule", "enabled", "=", 1]]},
     {"dt": "Custom Field", "filters": [["dt", "in", ["Warehouse", "Stock Entry", "Work Order"]]]},
