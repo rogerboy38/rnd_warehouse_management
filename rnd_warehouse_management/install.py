@@ -52,7 +52,7 @@ def create_default_movement_types():
         },
         {
             "doctype": "Movement Type",
-            "purpose": "Transfer Posting",
+            "purpose": "Material Transfer",
             "movement_code": "311",
             "movement_description": "Transfer between storage locations",
             "add_to_transit": 1,
