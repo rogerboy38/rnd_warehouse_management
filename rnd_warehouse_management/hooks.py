@@ -13,11 +13,6 @@ required_apps = ["frappe", "erpnext"]
 
 # Override Workspace to prevent orphan deletion during bench migrate
 override_doctype_class = {
-    "rnd_warehouse_management.rnd_warehouse_management.workspace_protector.WorkspaceProtector",
-    "Sensor Skill": "rnd_warehouse_management.rnd_warehouse_management.doctype.sensor_skill.sensor_skill.SensorSkill",
-    # Existing workspace override
-    "Workspace": "rnd_warehouse_management.rnd_warehouse_management.workspace_protector.WorkspaceProtector",
-    # Custom DocTypes - Frappe GitHub Issue #37799
     "Sensor Skill": "rnd_warehouse_management.rnd_warehouse_management.doctype.sensor_skill.sensor_skill.SensorSkill",
     "Stock Entry Audit Log": "rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_audit_log.stock_entry_audit_log.StockEntryAuditLog",
     "Stock Entry Approval Rule": "rnd_warehouse_management.rnd_warehouse_management.doctype.stock_entry_approval_rule.stock_entry_approval_rule.StockEntryApprovalRule",
