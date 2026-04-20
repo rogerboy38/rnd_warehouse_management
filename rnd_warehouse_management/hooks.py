@@ -20,7 +20,7 @@ override_doctype_class = {
 }
 
 # Run workspace orphan fix before migration (Frappe GitHub Issue #37799)
-before_migrate = ["amb_w_tds.patches.fix_workspace_orphan.apply_patch"]
+before_migrate = ["amb_w_tds.patches.v13_5.restore_amb_workspaces.execute"]
 
 has_website_permission = {
     "Warehouse": "rnd_warehouse_management.permissions.warehouse_query",
