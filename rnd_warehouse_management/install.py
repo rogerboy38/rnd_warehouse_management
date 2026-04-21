@@ -61,18 +61,24 @@ def create_default_movement_types():
     ]
     
     created_count = 0
-    for mt_data in movement_types:
-        # Check if exists by purpose
-        if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
-            # Add name field
-            mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
-            frappe.get_doc(mt_data).insert(ignore_permissions=True)
-            created_count += 1
-    
-    if created_count > 0:
-        print(f"   ✅ Created {created_count} movement types")
-    else:
-        print("   ✅ Movement types already exist")
+    try:
+        for mt_data in movement_types:
+            # Check if exists by purpose
+            if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
+                # Add name field
+                mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
+                frappe.get_doc(mt_data).insert(ignore_permissions=True)
+                created_count += 1
+        if created_count > 0:
+            print(f"   ✅ Created {created_count} movement types")
+        else:
+            print("   ✅ Movement types already exist")
+    except Exception as e:
+        # Movement Type doctype not yet resolvable during fresh install
+        # (Frappe tries to import frappe.core.doctype.movement_type before sync).
+        # Records will be created on first bench migrate via fixtures.
+        frappe.db.rollback()
+        print(f"   ⚠️  Movement Type creation deferred: {type(e).__name__}: {e}")
 
 def create_default_workflows():
     """Create default approval workflows"""
