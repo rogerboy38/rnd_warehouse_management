@@ -76,25 +76,10 @@ doc_events = {
 
 # Fixtures
 fixtures = [
-    # Protect standard ERPNext workspaces from orphan deletion using override
-    # Note: Workspace fixture alone doesn't prevent orphan deletion, using override_doctype_class below instead
-    {"dt": "Movement Type Master", "filters": [["Movement Type Master", "is_active", "=", 1]]},
-    {"dt": "Stock Entry Approval Rule", "filters": [["Stock Entry Approval Rule", "enabled", "=", 1]]},
-    {"dt": "Custom Field", "filters": [["dt", "in", ["Warehouse", "Stock Entry", "Work Order"]]]},
-    {"dt": "Property Setter"},
-    {"dt": "Print Format"},
-    {"dt": "Custom Script"},
-    {"dt": "Letter Head"},
-    {"dt": "Workflow"},
-    {"dt": "Workflow State"},
-    {"dt": "Workflow Action Master"},
-    {"dt": "Role"},
-    {"dt": "Custom Field",
-        "filters": [
-            ["dt", "in", ["Stock Entry", "Work Order", "Warehouse"]]
-        ]
-    },
-    {"dt": "Server Script"}
+    {"doctype": "Custom Field",    "filters": [["module", "=", "RND"]]},
+    {"doctype": "Property Setter", "filters": [["module", "=", "RND"]]},
+    {"doctype": "Workflow",        "filters": [["document_type", "in", ["Work Order", "Stock Entry"]]]},
+    {"doctype": "Notification",    "filters": [["module", "=", "RND"], ["is_standard", "=", 0]]},
 ]
 
 override_whitelisted_methods = {
