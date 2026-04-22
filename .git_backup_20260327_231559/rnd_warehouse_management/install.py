@@ -36,7 +36,7 @@ def create_default_movement_types():
     movement_types = [
         {
             "doctype": "Movement Type",
-            "purpose": "Material Receipt",
+            "purpose": "Material Transfer",
             "movement_code": "101",
             "movement_description": "Goods receipt from vendor",
             "add_to_transit": 0,
@@ -52,7 +52,7 @@ def create_default_movement_types():
         },
         {
             "doctype": "Movement Type",
-            "purpose": "Material Transfer",
+            "purpose": "Transfer Posting",
             "movement_code": "311",
             "movement_description": "Transfer between storage locations",
             "add_to_transit": 1,
@@ -61,24 +61,18 @@ def create_default_movement_types():
     ]
     
     created_count = 0
-    try:
-        for mt_data in movement_types:
-            # Check if exists by purpose
-            if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
-                # Add name field
-                mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
-                frappe.get_doc(mt_data).insert(ignore_permissions=True)
-                created_count += 1
-        if created_count > 0:
-            print(f"   ✅ Created {created_count} movement types")
-        else:
-            print("   ✅ Movement types already exist")
-    except Exception as e:
-        # Movement Type doctype not yet resolvable during fresh install
-        # (Frappe tries to import frappe.core.doctype.movement_type before sync).
-        # Records will be created on first bench migrate via fixtures.
-        frappe.db.rollback()
-        print(f"   ⚠️  Movement Type creation deferred: {type(e).__name__}: {e}")
+    for mt_data in movement_types:
+        # Check if exists by purpose
+        if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
+            # Add name field
+            mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
+            frappe.get_doc(mt_data).insert(ignore_permissions=True)
+            created_count += 1
+    
+    if created_count > 0:
+        print(f"   ✅ Created {created_count} movement types")
+    else:
+        print("   ✅ Movement types already exist")
 
 def create_default_workflows():
     """Create default approval workflows"""
