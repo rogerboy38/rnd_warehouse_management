@@ -165,6 +165,99 @@ class CustomStockEntry(Document):
 		# This would be implemented based on your business requirements
 		pass
 
+
+# V13.6.0 P3 migrated Server Script helpers
+# These functions replace enabled sandbox DB Server Scripts for Stock Entry.
+# Source Server Scripts:
+# - SAP Movement Type Validation
+# - Stock Entry Signature Validation
+# - Work Order Zone Status Update
+
+def validate_sap_movement_type_requirements(doc):
+    """Migrated from Server Script: SAP Movement Type Validation."""
+    sap_movement_type = doc.get("custom_sap_movement_type")
+    if not sap_movement_type:
+        return
+
+    sap_movement_type = str(sap_movement_type)
+
+    sap_rules = {
+        "261": {
+            "purpose": "Material Issue",
+            "required_signatures": ["warehouse_supervisor"],
+        },
+        "311": {
+            "purpose": "Material Transfer",
+            "required_signatures": ["warehouse_supervisor", "kitting_supervisor"],
+        },
+    }
+
+    rules = sap_rules.get(sap_movement_type)
+    if not rules:
+        return
+
+    if doc.get("purpose") != rules["purpose"]:
+        frappe.msgprint(
+            f"Purpose should be {rules['purpose']} for SAP Movement {sap_movement_type}",
+            alert=True,
+        )
+
+    for item in doc.get("items") or []:
+        source_warehouse = item.get("s_warehouse")
+        if not source_warehouse:
+            continue
+
+        source_type = frappe.db.get_value("Warehouse", source_warehouse, "warehouse_type")
+
+        if sap_movement_type == "261" and source_type not in ["Raw Material", "Work In Progress"]:
+            frappe.throw(f"Source warehouse {source_warehouse} type not allowed for SAP Movement 261")
+
+        if sap_movement_type == "311" and source_type not in ["Work In Progress"]:
+            frappe.throw(f"Source warehouse {source_warehouse} type not allowed for SAP Movement 311")
+
+
+def validate_stock_entry_signatures(doc):
+    """Migrated from Server Script: Stock Entry Signature Validation."""
+    workflow_state = doc.get("workflow_state")
+
+    if workflow_state == "Warehouse Approved":
+        if not doc.get("custom_warehouse_supervisor_signature"):
+            frappe.throw("Warehouse Supervisor signature is required for approval")
+
+        if not doc.get("custom_warehouse_supervisor_sign_date"):
+            doc.custom_warehouse_supervisor_sign_date = frappe.utils.now_datetime()
+
+    elif workflow_state == "Kitting Approved":
+        if doc.get("custom_sap_movement_type") == "311" and not doc.get("custom_kitting_supervisor_signature"):
+            frappe.throw("Kitting Supervisor signature is required for SAP Movement 311")
+
+        if doc.get("custom_kitting_supervisor_signature") and not doc.get("custom_kitting_supervisor_sign_date"):
+            doc.custom_kitting_supervisor_sign_date = frappe.utils.now_datetime()
+
+    if not doc.get("custom_gi_gt_slip_number") and workflow_state in ["Warehouse Approved", "Kitting Approved"]:
+        doc.custom_gi_gt_slip_number = f"GI-GT-{doc.name}"
+        doc.custom_gi_gt_slip_generated_on = frappe.utils.now_datetime()
+
+
+def update_work_order_zone_status_from_stock_entry(doc):
+    """Migrated from Server Script: Work Order Zone Status Update."""
+    work_order_reference = doc.get("custom_work_order_reference")
+    zone_status = doc.get("custom_zone_status")
+
+    if not (work_order_reference and zone_status):
+        return
+
+    frappe.db.set_value(
+        "Work Order",
+        work_order_reference,
+        {
+            "custom_current_zone_status": zone_status,
+            "custom_material_completion_percentage": doc.get("custom_material_completion_percentage"),
+            "custom_last_stock_entry": doc.name,
+            "custom_last_zone_update": frappe.utils.now_datetime(),
+        },
+    )
+
 # Hooks
 def on_update_after_submit(doc, method=None):
 	"""Hook: After updating submitted Stock Entry"""
@@ -253,20 +346,28 @@ def can_approve(user, stock_entry):
 # Module-level functions for doc_events hooks in hooks.py
 # These wrapper functions are called by Frappe's doc_events system
 
-def before_save(doc, method):
-    """Hook for before_save event - called by hooks.py doc_events"""
-    # The CustomStockEntry class methods handle the actual logic
-    # This wrapper is needed because doc_events expects module-level functions
-    pass
+def validate(doc, method=None):
+    """Hook for validate event - migrated from Server Script."""
+    validate_sap_movement_type_requirements(doc)
+
+def before_save(doc, method=None):
+    """Hook for before_save event - migrated Server Script signature checks."""
+    validate_stock_entry_signatures(doc)
 
 def before_submit(doc, method):
     """Hook for before_submit event"""
     pass
 
-def on_submit(doc, method):
-    """Hook for on_submit event - Phase 5.2: Auto-create QI on Manufacture"""
+def on_submit(doc, method=None):
+    """Hook for on_submit event.
+
+    Preserves existing Phase 5.2 QI automation and migrates
+    Work Order zone status update from Server Script.
+    """
     from rnd_warehouse_management.rnd_warehouse_management.qi_automation import create_quality_inspection_on_manufacture
+
     create_quality_inspection_on_manufacture(doc, method)
+    update_work_order_zone_status_from_stock_entry(doc)
 
 def before_cancel(doc, method):
     """Hook for before_cancel event"""

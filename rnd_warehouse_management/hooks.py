@@ -56,6 +56,7 @@ doctype_list_js = {
 # DocType Event Hooks
 doc_events = {
     "Stock Entry": {
+        "validate": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.validate",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_save",
         "before_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_submit",
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_submit",
