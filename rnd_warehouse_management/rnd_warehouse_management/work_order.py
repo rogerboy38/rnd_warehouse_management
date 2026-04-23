@@ -4,12 +4,70 @@ from frappe.utils import nowdate, now_datetime, flt
 
 def before_save(doc, method=None):
 	"""Hook: Before saving Work Order"""
+	assign_zone_from_source_warehouse(doc)
 	set_initial_zone_status(doc)
 	update_material_requirements(doc)
 
 def on_submit(doc, method=None):
 	"""Hook: After submitting Work Order"""
     # DISABLED: 	create_initial_material_assessment(doc)
+
+# V13.6.0 P3 migrated Server Script helper
+# Replaces enabled sandbox DB Server Script:
+# - Work Order Zone Assignment
+
+def assign_zone_from_source_warehouse(doc):
+        """Migrated from Server Script: Work Order Zone Assignment."""
+        try:
+                source_warehouse = doc.get("source_warehouse")
+                if not source_warehouse:
+                        return
+
+                warehouse_name = source_warehouse.upper()
+
+                frappe.msgprint(f"Checking warehouse: {warehouse_name}")
+
+                is_red_zone = False
+                if "QC" in warehouse_name:
+                        is_red_zone = True
+                elif "HOLD" in warehouse_name:
+                        is_red_zone = True
+                elif "QUARANTINE" in warehouse_name:
+                        is_red_zone = True
+                elif "INSPECTION" in warehouse_name:
+                        is_red_zone = True
+                elif "SCRAP" in warehouse_name:
+                        is_red_zone = True
+
+                is_green_zone = False
+                if "FG" in warehouse_name:
+                        is_green_zone = True
+                elif "FINISHED" in warehouse_name:
+                        is_green_zone = True
+                elif "STAGING" in warehouse_name:
+                        is_green_zone = True
+                elif "KIT" in warehouse_name:
+                        is_green_zone = True
+                elif "GREEN" in warehouse_name:
+                        is_green_zone = True
+
+                if is_red_zone:
+                        doc.custom_zone_assignment = "Red Zone"
+                        doc.custom_scanning_required = 1
+                        frappe.msgprint("✅ Assigned to Red Zone")
+                elif is_green_zone:
+                        doc.custom_zone_assignment = "Green Zone"
+                        doc.custom_scanning_required = 0
+                        frappe.msgprint("✅ Assigned to Green Zone")
+                else:
+                        doc.custom_zone_assignment = "Transfer Zone"
+                        doc.custom_scanning_required = 1
+                        frappe.msgprint("⚠️ Assigned to Transfer Zone")
+
+        except Exception as e:
+                frappe.msgprint(f"❌ Error: {str(e)}")
+                frappe.log_error(f"Work Order Zone Error: {str(e)}")
+
 
 def set_initial_zone_status(doc):
 	"""Set initial zone status for new Work Orders"""
