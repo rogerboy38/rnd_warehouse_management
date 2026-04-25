@@ -1,0 +1,1 @@
+rnd_warehouse_management.patches.v13_6.p3_kill_patches.kill_migrated_server_scripts
