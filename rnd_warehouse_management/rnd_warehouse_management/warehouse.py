@@ -67,7 +67,7 @@ def validate_warehouse_configuration(doc):
 		doc.is_rejected_warehouse = 1
 	
 	# Set temperature control recommendations
-	if rules.get("temperature_controlled") and not doc.custom_temperature_control:
+	if rules.get("temperature_controlled") and not doc.custom_temperature_controlled:
 		frappe.msgprint(_("Consider enabling temperature control for {0} warehouse").format(doc.warehouse_type), alert=True)
 
 def set_default_transit_warehouse(doc):
@@ -91,7 +91,7 @@ def set_default_transit_warehouse(doc):
 
 def update_temperature_settings(doc):
 	"""Update temperature-related settings"""
-	if doc.custom_temperature_control:
+	if doc.custom_temperature_controlled:
 		# Validate temperature range
 		if doc.custom_target_temperature:
 			target_temp = flt(doc.custom_target_temperature)
@@ -180,7 +180,7 @@ def get_warehouse_dashboard_data(warehouse=None):
 		warehouses = frappe.get_all(
 			"Warehouse",
 			filters=filters,
-			fields=["name", "warehouse_type", "is_group", "parent_warehouse", "company", "custom_temperature_control", "custom_target_temperature"]
+			fields=["name", "warehouse_type", "is_group", "parent_warehouse", "company", "custom_temperature_controlled", "custom_target_temperature"]
 		)
 		
 		# Get stock levels for each warehouse
@@ -258,7 +258,7 @@ def get_item_stock_locations(item_code: str) -> List[dict]:
             (b.actual_qty - b.reserved_qty) AS available_qty,
             w.warehouse_type,
             w.parent_warehouse,
-            w.custom_temperature_control
+            w.custom_temperature_controlled
         FROM `tabBin` b
         LEFT JOIN `tabWarehouse` w ON w.name = b.warehouse
         WHERE b.item_code = %(item_code)s
@@ -520,7 +520,7 @@ def get_warehouses_by_type(company, warehouse_type=None):
     return frappe.db.get_all(
         "Warehouse",
         fields=["name", "warehouse_name", "warehouse_type", "parent_warehouse",
-                "custom_temperature_control", "custom_target_temperature"],
+                "custom_temperature_controlled", "custom_target_temperature"],
         filters=filters,
         order_by="warehouse_type, name",
     )
