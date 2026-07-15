@@ -75,6 +75,11 @@ doc_events = {
 
 # Fixtures
 fixtures = [
+    # MIGCH-P1-5/C8: hand-made site DocType this app depends on (validate_sap_movement_type
+    # reads it). Shipped as fixtures so fresh installs are self-contained (was: undocumented
+    # site surgery; crash fingerprint on clean installs). 14 rows as of 2026-07-14.
+    {"doctype": "DocType",        "filters": [["name", "=", "Movement Type"]]},
+    {"doctype": "Movement Type"},
     {"doctype": "Custom Field",    "filters": [["module", "=", "RND"]]},
     {"doctype": "Property Setter", "filters": [["module", "=", "RND"]]},
     {"doctype": "Workflow",        "filters": [["document_type", "in", ["Work Order", "Stock Entry"]]]},
