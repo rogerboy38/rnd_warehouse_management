@@ -8,14 +8,15 @@ def update_zone_status():
 		work_orders = frappe.get_all(
 			"Work Order",
 			filters={"status": ["not in", ["Completed", "Stopped", "Cancelled"]]},
-			fields=["name", "bom_no", "qty"]
+			fields=["name", "bom_no", "qty", "sales_order"]
 		)
-		
+
 		from rnd_warehouse_management.rnd_warehouse_management.work_order import update_work_order_zone_status
 
 		skipped_no_bom = 0
 		skipped_bom_missing = 0
 		skipped_bom_draft = 0
+		skipped_cancelled_link = 0
 		processed = 0
 
 		for wo in work_orders:
@@ -34,12 +35,20 @@ def update_zone_status():
 				skipped_bom_draft += 1
 				continue
 
+			# R4: a Work Order linking a CANCELLED document cannot be saved -- frappe raises
+			# "Cannot link cancelled document" on validate. That is a data condition like the
+			# BOM ones, so skip and count it rather than letting save() raise per run.
+			if wo.sales_order and frappe.db.get_value("Sales Order", wo.sales_order, "docstatus") == 2:
+				skipped_cancelled_link += 1
+				continue
+
 			update_work_order_zone_status(wo.name)
 			processed += 1
 
 		frappe.log(
 			f"Zone status: {processed} processed, {skipped_bom_missing} skipped (BOM missing), "
-			f"{skipped_bom_draft} skipped (BOM not submitted), {skipped_no_bom} skipped (no BOM), "
+			f"{skipped_bom_draft} skipped (BOM not submitted), {skipped_cancelled_link} skipped "
+			f"(cancelled linked doc), {skipped_no_bom} skipped (no BOM), "
 			f"of {len(work_orders)} Work Orders"
 		)
 	except Exception as e:
