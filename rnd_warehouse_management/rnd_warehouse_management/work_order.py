@@ -2,6 +2,19 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
 
+#: The zone-tracking fields this module maintains on Work Order. ALL FIVE are
+#: allow_on_submit=0, so on a SUBMITTED Work Order `save()` is refused by frappe's
+#: submit lock -- and the refusal message embeds every changed before-value, which is
+#: how a multi-KB string reached `log_error`'s title and produced the 1406 abort.
+#: Derived by name from the DB (tabCustom Field where dt='Work Order'), not hand-listed.
+ZONE_TRACKING_FIELDS = (
+	"custom_current_zone_status",
+	"custom_zone_status_color",
+	"custom_material_completion_percentage",
+	"custom_missing_materials_json",
+	"custom_last_zone_update",
+)
+
 def before_save(doc, method=None):
 	"""Hook: Before saving Work Order"""
 	set_initial_zone_status(doc)
@@ -126,8 +139,23 @@ def update_work_order_zone_status(work_order_name):
 	try:
 		work_order = frappe.get_doc("Work Order", work_order_name)
 		update_material_requirements(work_order)
-		work_order.save(ignore_permissions=True)
-		
+		work_order.custom_last_zone_update = now_datetime()
+
+		if work_order.docstatus == 1:
+			# D2: the zone fields are allow_on_submit=0, so save() on a SUBMITTED Work Order
+			# is refused -- permanently, because the value can only stop differing if it is
+			# written. db_set writes the row without the submit-lock validation. One dict =
+			# one UPDATE and one before_change/on_change pair.
+			# update_modified=False: this is derived tracking state, not a user edit, and
+			# bumping `modified` on a submitted document would misrepresent its audit trail.
+			work_order.db_set(
+				{f: work_order.get(f) for f in ZONE_TRACKING_FIELDS},
+				update_modified=False,
+			)
+		else:
+			work_order.save(ignore_permissions=True)
+
+
 		return {
 			"status": "success",
 			"zone_status": work_order.custom_current_zone_status,
