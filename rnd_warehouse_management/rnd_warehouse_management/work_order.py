@@ -168,7 +168,7 @@ def update_work_order_zone_status(work_order_name):
 		# the title truncates it to varchar(140) mid-tag, and _sanitize_content() then
 		# re-closes the tag and pushes it back over the column width -> DataError 1406,
 		# raised inside this except block and escaping the caller's loop.
-		frappe.log_error(title="Work Order zone status update failed", message=str(e))
+		frappe.log_error(title="Work Order zone status update failed", message=str(e), reference_doctype="Work Order", reference_name=work_order_name)
 		return {"status": "error", "message": str(e)}
 
 @frappe.whitelist()
