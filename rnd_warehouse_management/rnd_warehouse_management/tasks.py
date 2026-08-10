@@ -11,14 +11,42 @@ def update_zone_status():
 			fields=["name", "bom_no", "qty"]
 		)
 		
+		from rnd_warehouse_management.rnd_warehouse_management.work_order import update_work_order_zone_status
+
+		skipped_no_bom = 0
+		skipped_bom_missing = 0
+		skipped_bom_draft = 0
+		processed = 0
+
 		for wo in work_orders:
-			if wo.bom_no:
-				from rnd_warehouse_management.rnd_warehouse_management.work_order import update_work_order_zone_status
-				update_work_order_zone_status(wo.name)
-		
-		frappe.log(f"Updated zone status for {len(work_orders)} Work Orders")
+			if not wo.bom_no:
+				skipped_no_bom += 1
+				continue
+
+			# D3: resolve the BOM once, up front. A missing or unsubmitted BOM is a known
+			# data condition, not an exception -- skip it and count it rather than letting
+			# it raise inside the per-WO handler on every run.
+			bom_docstatus = frappe.db.get_value("BOM", wo.bom_no, "docstatus")
+			if bom_docstatus is None:
+				skipped_bom_missing += 1
+				continue
+			if bom_docstatus != 1:
+				skipped_bom_draft += 1
+				continue
+
+			update_work_order_zone_status(wo.name)
+			processed += 1
+
+		frappe.log(
+			f"Zone status: {processed} processed, {skipped_bom_missing} skipped (BOM missing), "
+			f"{skipped_bom_draft} skipped (BOM not submitted), {skipped_no_bom} skipped (no BOM), "
+			f"of {len(work_orders)} Work Orders"
+		)
 	except Exception as e:
-		frappe.log_error(f"Zone status update task failed: {str(e)}")
+		# Bounded title: the detail goes to `error` (longtext). A long title would be
+		# truncated to varchar(140) and can then be re-expanded past that width by
+		# _sanitize_content(), raising DataError 1406 from inside this handler.
+		frappe.log_error(title="Zone status update task failed", message=str(e))
 
 def cleanup_expired_signatures():
 	"""Clean up expired signature data (older than 1 year)"""

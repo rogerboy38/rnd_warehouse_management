@@ -135,7 +135,12 @@ def update_work_order_zone_status(work_order_name):
 			"last_updated": work_order.custom_last_zone_update
 		}
 	except Exception as e:
-		frappe.log_error(f"Work Order zone status update failed: {str(e)}")
+		# Bounded title: the detail goes to `error` (longtext). Frappe's submit-lock
+		# refusal embeds both before-values, so str(e) can run to many KB; passing it as
+		# the title truncates it to varchar(140) mid-tag, and _sanitize_content() then
+		# re-closes the tag and pushes it back over the column width -> DataError 1406,
+		# raised inside this except block and escaping the caller's loop.
+		frappe.log_error(title="Work Order zone status update failed", message=str(e))
 		return {"status": "error", "message": str(e)}
 
 @frappe.whitelist()
