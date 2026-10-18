@@ -5,6 +5,11 @@ All notable changes to the RND Warehouse Management app will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-10-18
+
+### Fixed
+- 2.1.1 — hourly `update_zone_status` no longer re-saves Work Orders; writes the five zone fields with `db.set_value(update_modified=False)` only when they change; no Version, no notifications, no required_items re-derivation; manual endpoint uses the same path.
+
 ## [1.0.0] - 2025-08-15
 
 ### Added
