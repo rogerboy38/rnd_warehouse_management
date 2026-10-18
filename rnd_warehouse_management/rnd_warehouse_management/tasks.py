@@ -2,23 +2,35 @@ import frappe
 from frappe.utils import nowdate, now_datetime
 
 def update_zone_status():
-	"""Scheduled task to update Work Order zone status"""
-	try:
-		# Get all active Work Orders
-		work_orders = frappe.get_all(
-			"Work Order",
-			filters={"status": ["not in", ["Completed", "Stopped", "Cancelled"]]},
-			fields=["name", "bom_no", "qty"]
-		)
-		
-		for wo in work_orders:
-			if wo.bom_no:
-				from rnd_warehouse_management.rnd_warehouse_management.work_order import update_work_order_zone_status
-				update_work_order_zone_status(wo.name)
-		
-		frappe.log(f"Updated zone status for {len(work_orders)} Work Orders")
-	except Exception as e:
-		frappe.log_error(f"Zone status update task failed: {str(e)}")
+	"""Scheduled task (hourly): refresh the zone fields of open Work Orders from current Bin quantities.
+
+	Never re-saves a Work Order: each changed field set is written with db.set_value(update_modified=False)
+	through work_order.refresh_zone_fields, and a Work Order whose zone fields are unchanged is not written
+	at all. One failing Work Order is logged and does not stop the others."""
+	from rnd_warehouse_management.rnd_warehouse_management.work_order import refresh_zone_fields
+
+	logger = frappe.logger("rnd_warehouse_management")
+	names = frappe.get_all(
+		"Work Order",
+		filters={
+			"docstatus": ["<", 2],
+			"status": ["not in", ["Completed", "Stopped", "Cancelled", "Closed"]],
+			"bom_no": ["is", "set"],
+		},
+		pluck="name",
+	)
+	checked = updated = failed = 0
+	for name in names:
+		checked += 1
+		try:
+			if refresh_zone_fields(frappe.get_doc("Work Order", name)):
+				updated += 1
+		except Exception:
+			failed += 1
+			frappe.log_error(title="Zone status update failed", message=frappe.get_traceback(),
+				reference_doctype="Work Order", reference_name=name)
+	frappe.db.commit()
+	logger.info(f"update_zone_status: checked={checked} updated={updated} failed={failed}")
 
 def cleanup_expired_signatures():
 	"""Clean up expired signature data (older than 1 year)"""

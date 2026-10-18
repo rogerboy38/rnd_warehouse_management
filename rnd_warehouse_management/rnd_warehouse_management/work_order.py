@@ -120,14 +120,47 @@ def get_permission_query_conditions(user):
 	
 	return " OR ".join(conditions) if conditions else "0=1"
 
+#: The zone fields derived from current Bin quantities (custom_last_zone_update is the stamp).
+ZONE_FIELDS = (
+	"custom_current_zone_status",
+	"custom_zone_status_color",
+	"custom_material_completion_percentage",
+	"custom_missing_materials_json",
+)
+
+
+def _zone_value_changed(fieldname, old, new):
+	if fieldname == "custom_material_completion_percentage":
+		# stored as a decimal column; compare at 6 places so a float re-computation of the same ratio is not a change
+		return flt(old, 6) != flt(new, 6)
+	return (old or "") != (new or "")
+
+
+def refresh_zone_fields(work_order, force_stamp=False):
+	"""Recompute the zone fields of a Work Order doc from current Bin quantities and write only what changed.
+
+	No save(): no validate, no doc_events, no Version, no required_items re-derivation. The fields are
+	written with db.set_value(update_modified=False). The stamp custom_last_zone_update is written when
+	another zone field changed, or always when force_stamp is set (manual refresh).
+	Returns the changed fieldnames (the stamp included when written)."""
+	before = {f: work_order.get(f) for f in ZONE_FIELDS}
+	update_material_requirements(work_order)
+	changed = {f: work_order.get(f) for f in ZONE_FIELDS if _zone_value_changed(f, before[f], work_order.get(f))}
+	if not changed and not force_stamp:
+		return []
+	changed["custom_last_zone_update"] = now_datetime()
+	frappe.db.set_value("Work Order", work_order.name, changed, update_modified=False)
+	work_order.custom_last_zone_update = changed["custom_last_zone_update"]
+	return list(changed)
+
+
 @frappe.whitelist()
 def update_work_order_zone_status(work_order_name):
-	"""API endpoint to manually update Work Order zone status"""
+	"""API endpoint to manually update Work Order zone status (no save; see refresh_zone_fields)"""
 	try:
-		work_order = frappe.get_doc("Work Order", work_order_name)
-		update_material_requirements(work_order)
-		work_order.save(ignore_permissions=True)
-		
+		work_order = frappe.get_doc("Work Order", work_order_name, check_permission="read")
+		refresh_zone_fields(work_order, force_stamp=True)
+
 		return {
 			"status": "success",
 			"zone_status": work_order.custom_current_zone_status,
@@ -135,7 +168,8 @@ def update_work_order_zone_status(work_order_name):
 			"last_updated": work_order.custom_last_zone_update
 		}
 	except Exception as e:
-		frappe.log_error(f"Work Order zone status update failed: {str(e)}")
+		frappe.log_error(title="Work Order zone status update failed", message=frappe.get_traceback(),
+			reference_doctype="Work Order", reference_name=work_order_name)
 		return {"status": "error", "message": str(e)}
 
 @frappe.whitelist()
