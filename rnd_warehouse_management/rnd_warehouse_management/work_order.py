@@ -109,6 +109,7 @@ def get_permission_query_conditions(user):
 	role_access = {
 		"Production Manager": "1=1",  # Access to all
 		"Warehouse Manager": "1=1",   # Access to all
+		"Planeacion": "1=1",          # 2.2.0: the planner sees every Work Order (granted on top of Manufacturing User)
 		"Manufacturing User": "(`tabWork Order`.owner = '{user}' OR `tabWork Order`.docstatus = 1)".format(user=user),
 		"Stock User": "(`tabWork Order`.docstatus = 1)"  # Only submitted Work Orders
 	}
