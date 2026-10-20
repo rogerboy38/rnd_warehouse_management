@@ -1,0 +1,23 @@
+[
+ {
+  "doctype": "Workflow State",
+  "icon": null,
+  "name": "Draft",
+  "style": null,
+  "workflow_state_name": "Draft"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": null,
+  "name": "Scheduled",
+  "style": "Success",
+  "workflow_state_name": "Scheduled"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": null,
+  "name": "Cancelled",
+  "style": "Danger",
+  "workflow_state_name": "Cancelled"
+ }
+]

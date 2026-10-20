@@ -55,6 +55,7 @@ doctype_list_js = {
 # DocType Event Hooks
 doc_events = {
     "Stock Entry": {
+        "before_insert": "rnd_warehouse_management.rnd_warehouse_management.workflow_utils.reset_workflow_state_on_amend",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_save",
         "before_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_submit",
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_submit",
@@ -62,6 +63,7 @@ doc_events = {
         "on_update_after_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_update_after_submit"
     },
     "Work Order": {
+        "before_insert": "rnd_warehouse_management.rnd_warehouse_management.workflow_utils.reset_workflow_state_on_amend",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.work_order.before_save",
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.work_order.on_submit"
     },
@@ -83,6 +85,10 @@ fixtures = [
     {"doctype": "Custom Field",    "filters": [["module", "=", "RND"]]},
     {"doctype": "Property Setter", "filters": [["module", "=", "RND"]]},
     {"doctype": "Workflow",        "filters": [["document_type", "in", ["Work Order", "Stock Entry"]]]},
+    # 2.2.0: masters and the role used by "Work Order Scheduling" (name filters, never bare doctypes)
+    {"doctype": "Workflow State",  "filters": [["name", "in", ["Draft", "Scheduled", "Cancelled"]]]},
+    {"doctype": "Workflow Action Master", "filters": [["name", "in", ["Schedule", "Cancel"]]]},
+    {"doctype": "Role",            "filters": [["name", "=", "Planeacion"]]},
     {"doctype": "Notification",    "filters": [["module", "=", "RND"], ["is_standard", "=", 0]]},
 ]
 
@@ -106,6 +112,8 @@ scheduler_events = {
 }
 
 after_install = "rnd_warehouse_management.install.after_install"
+# 2.2.0: map existing Work Orders to "Work Order Scheduling" (runs after sync_fixtures; idempotent)
+after_migrate = ["rnd_warehouse_management.rnd_warehouse_management.workflow_utils.after_migrate_work_order_workflow"]
 after_uninstall = "rnd_warehouse_management.uninstall.after_uninstall"
 
 boot_session = "rnd_warehouse_management.boot.boot_session"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rnd_warehouse_management"
-version = "2.1.1"
+version = "2.2.0"
 description = "RND Warehouse Management System for ERPNext with SAP-style workflow integration"
 authors = [
     {name = "RogerBoy", email = "rogerboy38@hotmail.com"}
