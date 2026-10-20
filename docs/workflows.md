@@ -41,6 +41,8 @@ Requires `bench migrate`. Its `sync_fixtures` installs the workflow, the states 
 1. deletes the old workflow `Starting Work Order` (its states Not Started / Start and action Start are kept);
 2. sets each Work Order's `workflow_state` from its docstatus (0 Draft, 1 Scheduled, 2 Cancelled) where it differs, without a save
    (no Version, no notification, `modified` unchanged);
-3. closes Open Workflow Actions on Work Order (status Completed: Workflow Action allows only Open / Completed).
+3. closes Open Workflow Actions on Work Order whose state is not Draft / Scheduled / Cancelled, i.e. the old workflow's
+   (status Completed: Workflow Action allows only Open / Completed). Pending actions of Work Order Scheduling are never touched,
+   so a later migrate leaves the planner's Open Schedule actions alone.
 
 It prints its counts in the migrate output.

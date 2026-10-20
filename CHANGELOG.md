@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2026-10-20
 
 ### Changed
-- 2.2.0 — Work Order workflow `Work Order Scheduling` replaces `Starting Work Order`: Draft → Schedule (Planeacion) → Scheduled (docstatus 1) → Cancel (Planeacion, Manufacturing Manager) → Cancelled; Don't Override Status; new fixtures Workflow State / Workflow Action Master / Role Planeacion; `before_insert` resets `workflow_state` on amended Work Orders and Stock Entries; `after_migrate` maps existing Work Orders' states by docstatus, closes stale Open Workflow Actions (status Completed — Workflow Action allows only Open / Completed), deletes the old workflow. Requires `bench migrate` on each site.
+- 2.2.0 — Work Order workflow `Work Order Scheduling` replaces `Starting Work Order`: Draft → Schedule (Planeacion) → Scheduled (docstatus 1) → Cancel (Planeacion, Manufacturing Manager) → Cancelled; Don't Override Status; new fixtures Workflow State / Workflow Action Master / Role Planeacion; `before_insert` resets `workflow_state` on amended Work Orders and Stock Entries; `after_migrate` maps existing Work Orders' states by docstatus, closes the old workflow's Open Workflow Actions (state not Draft / Scheduled / Cancelled; status Completed — Workflow Action allows only Open / Completed; pending actions of the new workflow are never touched), deletes the old workflow. Requires `bench migrate` on each site.
 - Planeacion is granted in addition to Manufacturing User; it gates Schedule and Cancel and widens the Work Order list (every Work Order), it grants no document permission by itself.
 - Rule: Workflows on Work Order and Stock Entry are edited in the repo only; a UI edit on a site is wiped at the next migrate.
 
