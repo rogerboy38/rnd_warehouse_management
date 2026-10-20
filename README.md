@@ -168,6 +168,8 @@ This module integrates with the broader AMB-Wellness ERPNext ecosystem:
 
 ## 🔧 Configuration
 
+> **Workflows live in the repo.** The Work Order and Stock Entry workflows ship as fixtures (`fixtures/workflow.json`); every `bench migrate` re-imports them, so a UI edit on a site is wiped at the next migrate. Edit them in the repo only. See [docs/workflows.md](docs/workflows.md).
+
 ### Warehouse Setup
 
 ```python
