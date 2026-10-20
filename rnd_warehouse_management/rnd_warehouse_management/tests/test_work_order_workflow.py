@@ -97,7 +97,9 @@ class TestA_MigrateResult(IntegrationTestCase):
 		mismatched = frappe.db.sql("""select name from `tabWork Order` where (docstatus = 0 and ifnull(workflow_state, '') != 'Draft')
 			or (docstatus = 1 and ifnull(workflow_state, '') != 'Scheduled') or (docstatus = 2 and ifnull(workflow_state, '') != 'Cancelled')""")
 		self.assertEqual(mismatched, ())
-		self.assertEqual(frappe.db.count("Workflow Action", {"reference_doctype": "Work Order", "status": "Open"}), 0)
+		# no Open Work Order action is left in an OLD state (Open actions in the new states are legitimate)
+		self.assertEqual(frappe.db.count("Workflow Action", {"reference_doctype": "Work Order", "status": "Open",
+			"workflow_state": ["not in", ["Draft", "Scheduled", "Cancelled"]]}), 0)
 		self.assertFalse(frappe.db.exists("Workflow", "Starting Work Order"))
 		# a second call writes nothing
 		with patch.object(frappe.db, "set_value", wraps=frappe.db.set_value) as set_value, patch.object(frappe, "delete_doc") as delete_doc:
@@ -199,14 +201,22 @@ class TestB_WorkflowBehaviour(IntegrationTestCase):
 		submitted = apply_workflow(_draft_work_order(), "Schedule")
 		for wo, state in ((drafts[0], "Not Started"), (drafts[1], "Start"), (submitted, "Start")):
 			frappe.db.set_value("Work Order", wo.name, "workflow_state", state, update_modified=False)
-		frappe.get_doc({"doctype": "Workflow Action", "reference_doctype": "Work Order", "reference_name": drafts[0].name,
+		old_action = frappe.get_doc({"doctype": "Workflow Action", "reference_doctype": "Work Order", "reference_name": drafts[0].name,
 			"workflow_state": "Not Started", "status": "Open", "user": "Administrator"}).insert(ignore_permissions=True)
-		# drafts inserted under the workflow also get Open actions from Frappe itself: all of them are closed
-		open_now = frappe.db.count("Workflow Action", {"reference_doctype": "Work Order", "status": "Open"})
-		self.assertGreaterEqual(open_now, 1)
+		# a planner's legitimate pending action in the new workflow's first state: it must survive every migrate
+		pending = frappe.get_doc({"doctype": "Workflow Action", "reference_doctype": "Work Order", "reference_name": drafts[1].name,
+			"workflow_state": "Draft", "status": "Open", "user": "Administrator"}).insert(ignore_permissions=True)
+		new_states = ["Draft", "Scheduled", "Cancelled"]
+		open_new_before = frappe.get_all("Workflow Action", filters={"reference_doctype": "Work Order", "status": "Open",
+			"workflow_state": ["in", new_states]}, pluck="name")
+		self.assertIn(pending.name, open_new_before)
 		result = workflow_utils.after_migrate_work_order_workflow()
-		self.assertEqual(result, {"deleted": 0, "mapped": 3, "closed": open_now})
-		self.assertEqual(frappe.db.count("Workflow Action", {"reference_doctype": "Work Order", "status": "Open"}), 0)
+		self.assertEqual(result, {"deleted": 0, "mapped": 3, "closed": 1})  # only the old-state action
+		self.assertEqual(frappe.db.get_value("Workflow Action", old_action.name, "status"), "Completed")
+		self.assertEqual(frappe.db.get_value("Workflow Action", pending.name, "status"), "Open")
+		open_new_after = frappe.get_all("Workflow Action", filters={"reference_doctype": "Work Order", "status": "Open",
+			"workflow_state": ["in", new_states]}, pluck="name")
+		self.assertEqual(sorted(open_new_after), sorted(open_new_before))  # every new-state Open action untouched
 		self.assertEqual([frappe.db.get_value("Work Order", w.name, "workflow_state") for w in (*drafts, submitted)],
 			["Draft", "Draft", "Scheduled"])
 		self.assertEqual(workflow_utils.after_migrate_work_order_workflow(), {"deleted": 0, "mapped": 0, "closed": 0})

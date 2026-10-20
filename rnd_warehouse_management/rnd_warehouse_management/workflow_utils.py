@@ -38,10 +38,18 @@ def after_migrate_work_order_workflow():
 				frappe.db.set_value("Work Order", name, "workflow_state", state, update_modified=False)
 			mapped += len(names)
 
-	# 3. Open Workflow Actions on Work Order belong to the old workflow's states: close them. Workflow Action.status
-	#    allows only Open / Completed, so they become Completed (= not pending any more), kept as history.
+	# 3. Open Workflow Actions on Work Order left by the OLD workflow (state not one of Work Order Scheduling's states,
+	#    NULL included): close them. Open actions in Draft / Scheduled / Cancelled are the planner's legitimate pending
+	#    actions and are never touched, so a later migrate leaves them alone. Workflow Action.status allows only
+	#    Open / Completed, so the old ones become Completed (= not pending any more), kept as history.
+	new_states = tuple(WORK_ORDER_STATE_BY_DOCSTATUS.values())
+	stale = frappe.db.sql_list(
+		"""select name from `tabWorkflow Action` where reference_doctype = 'Work Order' and status = 'Open'
+		and ifnull(workflow_state, '') not in %(states)s""",
+		{"states": new_states},
+	)
 	closed = 0
-	for name in frappe.get_all("Workflow Action", filters={"reference_doctype": "Work Order", "status": "Open"}, pluck="name"):
+	for name in stale:
 		frappe.db.set_value("Workflow Action", name, "status", "Completed", update_modified=False)
 		closed += 1
 
