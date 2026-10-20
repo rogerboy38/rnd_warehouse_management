@@ -45,8 +45,9 @@ def after_migrate_work_order_workflow():
 		frappe.db.set_value("Workflow Action", name, "status", "Completed", update_modified=False)
 		closed += 1
 
-	logger.info(
-		f"after_migrate_work_order_workflow: old workflow deleted={deleted} work orders mapped={mapped} "
-		f"open workflow actions closed={closed}"
-	)
+	summary = (f"after_migrate_work_order_workflow: old workflow deleted={deleted} work orders mapped={mapped} "
+		f"open workflow actions closed={closed}")
+	# print: migrate output is where this is read; the logger's INFO is below Frappe's default level (ERROR)
+	print(summary)
+	logger.info(summary)
 	return {"deleted": deleted, "mapped": mapped, "closed": closed}
