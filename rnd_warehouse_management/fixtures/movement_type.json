@@ -183,15 +183,15 @@
  },
  {
   "add_to_transit": 0,
-  "default_stock_entry_type": "Material Transfer for Manufacture",
+  "default_stock_entry_type": "Material Issue",
   "docstatus": 0,
   "doctype": "Movement Type",
   "is_standard": 0,
-  "modified": "2026-11-02 22:00:00.000000",
+  "modified": "2026-11-03 05:45:00.000000",
   "movement_code": "281",
-  "movement_description": "Kitting front flush on WIP",
+  "movement_description": "Goods Issue for Sampling",
   "name": "281",
-  "purpose": "Material Transfer for Manufacture",
+  "purpose": "Material Issue",
   "sap_equivalent": "281"
  },
  {

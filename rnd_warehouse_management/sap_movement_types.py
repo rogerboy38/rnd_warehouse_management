@@ -12,7 +12,8 @@ Entries on prod store — `561 (Initial Entry - Stock Balance)` — NOT the `…
 `0ca2d4e` shipped (a Select value outside `options` throws on every save that is not a cancel, so
 that form would have made the 42 un-editable; TASKS-272b); the rest
 take the first line of the Movement Type record's own description (313: its name + purpose),
-281 is Hugh's wording (2026-11-02), 501 is docs_TECHNICAL_SPECIFICATIONS.md MT-501.
+281 is prod's Movement Type Master MT-281 description (Hugh's ruling 2026-11-03, TASKS-272c), 501 is
+docs_TECHNICAL_SPECIFICATIONS.md MT-501.
 """
 
 SAP_MOVEMENT_TYPES = [
@@ -26,7 +27,7 @@ SAP_MOVEMENT_TYPES = [
 	{"code": "108", "label": "Send to Subcontractor / Material Transfer", "purpose": "Send to Subcontractor", "default_stock_entry_type": "Send to Subcontractor", "description": "Send to Subcontractor / Material Transfer / 108 / 1 / Outgoing", "required_signatures": []},
 	{"code": "109", "label": "Stores Movement / Material Transfer", "purpose": "Material Issue", "default_stock_entry_type": "Material Issue", "description": "Stores Movement / Material Transfer / 109 /", "required_signatures": []},
 	{"code": "261", "label": "FrontFlush - Goods Issue for Production", "purpose": "Manufacture", "default_stock_entry_type": "Manufacture", "description": "Issue materials from storage to production", "required_signatures": ["warehouse_supervisor"]},
-	{"code": "281", "label": "Kitting front flush on WIP", "purpose": "Material Transfer for Manufacture", "default_stock_entry_type": "Material Transfer for Manufacture", "description": "Kitting front flush on WIP", "required_signatures": []},
+	{"code": "281", "label": "Goods Issue for Sampling", "purpose": "Material Issue", "default_stock_entry_type": "Material Issue", "description": "Goods Issue for Sampling", "required_signatures": []},
 	{"code": "311", "label": "BackFlush - Transfer for Kitting", "purpose": "Material Consumption for Manufacture", "default_stock_entry_type": "Material Consumption for Manufacture", "description": "Transfer materials from production to kitting area", "required_signatures": ["warehouse_supervisor", "kitting_supervisor"]},
 	{"code": "313", "label": "Kitting to WIP / Material Transfer for Manufacture", "purpose": "Material Transfer for Manufacture", "default_stock_entry_type": "Material Transfer for Manufacture", "description": "Raw Material / Material to Manufacture / 313 equivalent SAP transaction code \"MB1B\"", "required_signatures": []},
 	{"code": "501", "label": "Receipt without Purchase Order", "purpose": "Material Receipt", "default_stock_entry_type": "Material Receipt", "description": "Receipt without Purchase Order (MT-501)", "required_signatures": []},

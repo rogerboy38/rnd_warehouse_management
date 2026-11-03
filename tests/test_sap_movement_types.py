@@ -38,6 +38,10 @@ class TestOneList(unittest.TestCase):
 			self.assertEqual(r["name"], code)
 		(r501,) = [x for x in rows if x["movement_code"] == "501"]
 		self.assertEqual(r501["default_stock_entry_type"], "Material Receipt")
+		# TASKS-272c: 281 = Goods Issue for Sampling, Stock Entry Type Material Issue (as 103 and 109)
+		(r281,) = [x for x in rows if x["movement_code"] == "281"]
+		self.assertEqual((r281["purpose"], r281["default_stock_entry_type"]), ("Material Issue", "Material Issue"))
+		self.assertEqual(r281["movement_description"], "Goods Issue for Sampling")
 
 	def test_select_options_equal_the_list(self):
 		(cf,) = [c for c in fixture("custom_field.json") if c["fieldname"] == "custom_sap_movement_type"]
@@ -68,7 +72,7 @@ class TestOneList(unittest.TestCase):
 	def test_the_three_shipped_labels_are_untouched(self):
 		(cf,) = [c for c in fixture("custom_field.json") if c["fieldname"] == "custom_sap_movement_type"]
 		for kept in ("261 (FrontFlush - Goods Issue for Production)", "311 (BackFlush - Transfer for Kitting)",
-		             "561 (Initial Entry - Stock Balance)", "281 (Kitting front flush on WIP)",
+		             "561 (Initial Entry - Stock Balance)", "281 (Goods Issue for Sampling)",
 		             "501 (Receipt without Purchase Order)"):
 			self.assertIn("\n" + kept + "\n", cf["options"] + "\n")
 
