@@ -984,7 +984,7 @@
   "name": "Stock Entry-custom_sap_movement_type",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "\n261 (FrontFlush - Goods Issue for Production)\n311 (BackFlush - Transfer for Kitting)",
+  "options": "\n261 (FrontFlush - Goods Issue for Production)\n311 (BackFlush - Transfer for Kitting)\n561 (Initial Entry - Stock Balance / Material Receipt)",
   "permlevel": 0,
   "placeholder": null,
   "precision": null,

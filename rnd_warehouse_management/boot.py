@@ -25,6 +25,12 @@ def boot_session(bootinfo):
 			"description": "Transfer materials from production to kitting area",
 			"purpose": "Material Transfer",
 			"required_signatures": ["warehouse_supervisor", "kitting_supervisor"]
+		},
+		"561": {
+			"name": "Initial Entry - Stock Balance",
+			"description": "Initial entry of stock balance (opening stock) as a Material Receipt",
+			"purpose": "Material Receipt",
+			"required_signatures": ["warehouse_supervisor"]
 		}
 	}
 	
@@ -50,7 +56,7 @@ def boot_session(bootinfo):
 	bootinfo.rnd_warehouse_management = {
 		"version": "1.0.0",
 		"features": [
-			"SAP Movement Types (261, 311)",
+			"SAP Movement Types (261, 311, 561)",
 			"Dual Signature Workflow",
 			"Red/Green Zone Logic",
 			"GI/GT Slip Generation",
