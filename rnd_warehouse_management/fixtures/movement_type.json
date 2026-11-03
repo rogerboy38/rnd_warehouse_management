@@ -180,5 +180,31 @@
   "name": "Goods Issue to production order directly",
   "purpose": "Manufacture",
   "sap_equivalent": "261"
+ },
+ {
+  "add_to_transit": 0,
+  "default_stock_entry_type": "Material Transfer for Manufacture",
+  "docstatus": 0,
+  "doctype": "Movement Type",
+  "is_standard": 0,
+  "modified": "2026-11-02 22:00:00.000000",
+  "movement_code": "281",
+  "movement_description": "Kitting front flush on WIP",
+  "name": "281",
+  "purpose": "Material Transfer for Manufacture",
+  "sap_equivalent": "281"
+ },
+ {
+  "add_to_transit": 0,
+  "default_stock_entry_type": "Material Receipt",
+  "docstatus": 0,
+  "doctype": "Movement Type",
+  "is_standard": 0,
+  "modified": "2026-11-02 22:00:00.000000",
+  "movement_code": "501",
+  "movement_description": "Receipt without Purchase Order (MT-501)",
+  "name": "501",
+  "purpose": "Material Receipt",
+  "sap_equivalent": "501"
  }
 ]

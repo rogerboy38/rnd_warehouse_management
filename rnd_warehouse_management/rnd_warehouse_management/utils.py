@@ -899,7 +899,10 @@ def format_sap_movement_type(movement_type):
     try:
         if not movement_type:
             return ""
-        
+        # TASKS-272: the field stores "<code> (<label>)"; look the record up by the leading code
+        from rnd_warehouse_management.sap_movement_types import sap_code
+        movement_type = sap_code(movement_type)
+
         # Get movement type details from Movement Type Master
         movement_doc = frappe.db.get_value(
             "Movement Type Master",

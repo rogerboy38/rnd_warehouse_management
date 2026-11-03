@@ -12,28 +12,10 @@ def boot_session(bootinfo):
 		"Rejected": "Storage for rejected or defective materials"
 	}
 	
-	# Add SAP movement types
-	bootinfo.sap_movement_types = {
-		"261": {
-			"name": "FrontFlush - Goods Issue for Production",
-			"description": "Issue materials from storage to production",
-			"purpose": "Material Issue",
-			"required_signatures": ["warehouse_supervisor"]
-		},
-		"311": {
-			"name": "BackFlush - Transfer for Kitting",
-			"description": "Transfer materials from production to kitting area",
-			"purpose": "Material Transfer",
-			"required_signatures": ["warehouse_supervisor", "kitting_supervisor"]
-		},
-		"561": {
-			"name": "Initial Entry - Stock Balance",
-			"description": "Initial entry of stock balance (opening stock) as a Material Receipt",
-			"purpose": "Material Receipt",
-			"required_signatures": ["warehouse_supervisor"]
-		}
-	}
-	
+	# Add SAP movement types — generated from the one list (TASKS-272)
+	from rnd_warehouse_management.sap_movement_types import boot_dict, CODES
+	bootinfo.sap_movement_types = boot_dict()
+
 	# Add zone status information
 	bootinfo.zone_status_info = {
 		"Red Zone": {
@@ -56,7 +38,7 @@ def boot_session(bootinfo):
 	bootinfo.rnd_warehouse_management = {
 		"version": "1.0.0",
 		"features": [
-			"SAP Movement Types (261, 311, 561)",
+			"SAP Movement Types (" + ", ".join(CODES) + ")",
 			"Dual Signature Workflow",
 			"Red/Green Zone Logic",
 			"GI/GT Slip Generation",

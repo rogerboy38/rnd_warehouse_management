@@ -30,45 +30,27 @@ def after_install():
     print("✅ RND Warehouse Management installation completed successfully!")
 
 def create_default_movement_types():
-    """Create default movement types if they don't exist"""
+    """Seed one Movement Type per SAP code of the one list (TASKS-272: was 101/261/311, keyed by purpose,
+    so at most one code per purpose could ever be seeded). Idempotent: a code that exists is left alone."""
+    from rnd_warehouse_management.sap_movement_types import SAP_MOVEMENT_TYPES
     print("📋 Setting up default movement types...")
-    
-    movement_types = [
-        {
-            "doctype": "Movement Type",
-            "purpose": "Material Receipt",
-            "movement_code": "101",
-            "movement_description": "Goods receipt from vendor",
-            "add_to_transit": 0,
-            "is_standard": 1
-        },
-        {
-            "doctype": "Movement Type",
-            "purpose": "Material Issue",
-            "movement_code": "261",
-            "movement_description": "Issue materials to production",
-            "add_to_transit": 0,
-            "is_standard": 1
-        },
-        {
-            "doctype": "Movement Type",
-            "purpose": "Material Transfer",
-            "movement_code": "311",
-            "movement_description": "Transfer between storage locations",
-            "add_to_transit": 1,
-            "is_standard": 1
-        }
-    ]
-    
     created_count = 0
     try:
-        for mt_data in movement_types:
-            # Check if exists by purpose
-            if not frappe.db.exists("Movement Type", {"purpose": mt_data["purpose"]}):
-                # Add name field
-                mt_data['name'] = mt_data['purpose'].replace(' ', '_').upper()
-                frappe.get_doc(mt_data).insert(ignore_permissions=True)
-                created_count += 1
+        for m in SAP_MOVEMENT_TYPES:
+            if frappe.db.exists("Movement Type", {"movement_code": m["code"]}):
+                continue
+            frappe.get_doc({
+                "doctype": "Movement Type",
+                "name": m["code"],
+                "movement_code": m["code"],
+                "sap_equivalent": m["code"],
+                "purpose": m["purpose"],
+                "default_stock_entry_type": m["default_stock_entry_type"],
+                "movement_description": m["label"],
+                "add_to_transit": 0,
+                "is_standard": 0,
+            }).insert(ignore_permissions=True)
+            created_count += 1
         if created_count > 0:
             print(f"   ✅ Created {created_count} movement types")
         else:

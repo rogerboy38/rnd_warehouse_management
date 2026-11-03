@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — SAP Movement Type: one entry per movement type in use (TASKS-272, 2026-11-02)
+
+- Stock Entry `custom_sap_movement_type` (Select) now lists all 16 codes in use, `code (description)`: 101, 102, 103, 104, 105, 106, 107, 108, 109, 261, 281, 311, 313, 501, 545, 561. The three labels already shipped (261, 311, 561) are unchanged (existing documents store them); the rest take the Movement Type record's own description (313: its name + purpose); 281 = "Kitting front flush on WIP" (Hugh, 2026-11-02); 501 = "Receipt without Purchase Order" (docs_TECHNICAL_SPECIFICATIONS.md MT-501).
+- `fixtures/movement_type.json`: records `281` and `501` added (501 → Material Receipt; 281 → *Material Transfer for Manufacture* is a proposal for Hugh, not settled).
+- One list, `rnd_warehouse_management/sap_movement_types.py`, now feeds `bootinfo.sap_movement_types` and the installer's Movement Type seed (which used to seed 101/261/311 only, keyed by purpose); `tests/test_sap_movement_types.py` asserts the fixture records, the Select options, boot and installer agree.
+- In-app readers compare the leading code (`sap_code()`): the Jinja `format_sap_movement_type`, the approval dashboard's movement-type filter, the approval rule's "view applicable Stock Entries" link. Site-side readers that still compare bare `'261'`/`'311'` are reported in the PR, not changed.
+
+
 All notable changes to the RND Warehouse Management app will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
