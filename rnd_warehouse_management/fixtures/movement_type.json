@@ -83,9 +83,9 @@
   "docstatus": 0,
   "doctype": "Movement Type",
   "is_standard": 0,
-  "modified": "2025-07-20 07:40:14.225392",
+  "modified": "2026-11-03 06:05:00.000000",
   "movement_code": "108",
-  "movement_description": "Send to Subcontractor / Material Transfer / 108 / 1 / Outgoing",
+  "movement_description": "Send to Subcontractor / 108 / 1 / Outgoing",
   "name": "TO_SUBCONTRACTOR",
   "purpose": "Send to Subcontractor",
   "sap_equivalent": "108"
@@ -109,9 +109,9 @@
   "docstatus": 0,
   "doctype": "Movement Type",
   "is_standard": 0,
-  "modified": "2025-07-20 07:39:02.079463",
+  "modified": "2026-11-03 06:05:00.000000",
   "movement_code": "109",
-  "movement_description": "Stores Movement / Material Transfer / 109 / ",
+  "movement_description": "Stores Movement / Material Issue / 109 / ",
   "name": "STORES_MOVEMENT",
   "purpose": "Material Issue",
   "sap_equivalent": "109"

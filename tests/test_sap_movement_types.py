@@ -105,6 +105,17 @@ class TestOneList(unittest.TestCase):
 		self.assertEqual([d["name"] for d in inserted], EXPECTED)
 		self.assertEqual(fake.db.exists.call_args_list[0].args, ("Movement Type", {"movement_code": "101"}))
 
+	def test_labels_do_not_contradict_the_records(self):
+		# TASKS-272d: a label that names a Stock Entry Type must name the record's own purpose
+		rows = {r["movement_code"]: r for r in fixture("movement_type.json")}
+		for m in smt.SAP_MOVEMENT_TYPES:
+			types = [t for t in ("Material Receipt", "Material Issue", "Material Transfer for Manufacture", "Material Transfer")
+			         if t in m["label"]]
+			if types:
+				self.assertEqual(types[0], rows[m["code"]]["purpose"], m["code"])
+		self.assertEqual([m["label"] for m in smt.SAP_MOVEMENT_TYPES if m["code"] in ("108", "109")],
+		                 ["Send to Subcontractor", "Stores Movement / Material Issue"])
+
 	def test_sap_code_reads_the_leading_code(self):
 		self.assertEqual(smt.sap_code("311 (BackFlush - Transfer for Kitting)"), "311")
 		self.assertEqual(smt.sap_code("311"), "311")
