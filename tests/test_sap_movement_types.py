@@ -49,10 +49,26 @@ class TestOneList(unittest.TestCase):
 		for l in lines[1:]:
 			self.assertRegex(l, r"^\d{3} \(.+\)$")
 
+	def test_the_561_label_is_the_string_the_submitted_documents_store(self):
+		# TASKS-272b: prod stores exactly this in 42 submitted Stock Entries; a value outside `options` throws on save
+		(cf,) = [c for c in fixture("custom_field.json") if c["fieldname"] == "custom_sap_movement_type"]
+		self.assertIn("\n561 (Initial Entry - Stock Balance)\n", cf["options"] + "\n")
+		self.assertNotIn("Material Receipt)", [l for l in cf["options"].split("\n") if l.startswith("561")][0])
+
+	def test_the_other_fixture_owner_ships_the_same_options_if_present(self):
+		# amb_w_spc/fixtures/custom_field.json carries the same 25 Stock Entry Custom Fields and syncs AFTER this app;
+		# when its checkout is reachable (AMB_W_SPC_FIXTURES env), its options must be byte-identical to ours
+		other = os.environ.get("AMB_W_SPC_FIXTURES")
+		if not other:
+			self.skipTest("AMB_W_SPC_FIXTURES not set")
+		with open(os.path.join(other, "custom_field.json"), encoding="utf-8") as f:
+			(theirs,) = [c for c in json.load(f) if c["name"] == "Stock Entry-custom_sap_movement_type"]
+		self.assertEqual(theirs["options"], smt.select_options())
+
 	def test_the_three_shipped_labels_are_untouched(self):
 		(cf,) = [c for c in fixture("custom_field.json") if c["fieldname"] == "custom_sap_movement_type"]
 		for kept in ("261 (FrontFlush - Goods Issue for Production)", "311 (BackFlush - Transfer for Kitting)",
-		             "561 (Initial Entry - Stock Balance / Material Receipt)", "281 (Kitting front flush on WIP)",
+		             "561 (Initial Entry - Stock Balance)", "281 (Kitting front flush on WIP)",
 		             "501 (Receipt without Purchase Order)"):
 			self.assertIn("\n" + kept + "\n", cf["options"] + "\n")
 

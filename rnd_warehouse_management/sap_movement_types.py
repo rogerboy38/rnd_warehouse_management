@@ -7,8 +7,10 @@ disagree again: boot and install are generated from it, and tests/test_sap_movem
 asserts the fixture files (movement_type.json records and the Select options) carry the same
 16 codes with the same labels.
 
-Label style of the Select option: `<code> (<description>)`. The three labels that were already
-shipped (261, 311, 561) are kept verbatim because existing Stock Entries store them; the rest
+Label style of the Select option: `<code> (<description>)`. The 261/311 labels are prod's verbatim; the 561 label is the string the 42 submitted Stock
+Entries on prod store — `561 (Initial Entry - Stock Balance)` — NOT the `… / Material Receipt` form
+`0ca2d4e` shipped (a Select value outside `options` throws on every save that is not a cancel, so
+that form would have made the 42 un-editable; TASKS-272b); the rest
 take the first line of the Movement Type record's own description (313: its name + purpose),
 281 is Hugh's wording (2026-11-02), 501 is docs_TECHNICAL_SPECIFICATIONS.md MT-501.
 """
@@ -29,7 +31,7 @@ SAP_MOVEMENT_TYPES = [
 	{"code": "313", "label": "Kitting to WIP / Material Transfer for Manufacture", "purpose": "Material Transfer for Manufacture", "default_stock_entry_type": "Material Transfer for Manufacture", "description": "Raw Material / Material to Manufacture / 313 equivalent SAP transaction code \"MB1B\"", "required_signatures": []},
 	{"code": "501", "label": "Receipt without Purchase Order", "purpose": "Material Receipt", "default_stock_entry_type": "Material Receipt", "description": "Receipt without Purchase Order (MT-501)", "required_signatures": []},
 	{"code": "545", "label": "Receive from Subcontractor / Material Receipt", "purpose": "Material Receipt", "default_stock_entry_type": "Material Receipt", "description": "Receive from Subcontractor / Material Receipt / 545 / 1 / Incoming", "required_signatures": []},
-	{"code": "561", "label": "Initial Entry - Stock Balance / Material Receipt", "purpose": "Material Receipt", "default_stock_entry_type": "Material Receipt", "description": "Initial entry of stock balance (opening stock) as a Material Receipt", "required_signatures": ["warehouse_supervisor"]},
+	{"code": "561", "label": "Initial Entry - Stock Balance", "purpose": "Material Receipt", "default_stock_entry_type": "Material Receipt", "description": "Initial entry of stock balance (opening stock) as a Material Receipt", "required_signatures": ["warehouse_supervisor"]},
 ]
 
 CODES = [m["code"] for m in SAP_MOVEMENT_TYPES]
