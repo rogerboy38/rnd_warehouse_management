@@ -118,8 +118,10 @@ function test_conditional_logic(frm) {
 }
 
 function view_applicable_stock_entries(frm) {
+	// TASKS-272: the rule links a Movement Type Master ("MT-<code>"); the Stock Entry field stores "<code> (<label>)"
+	const code = String(frm.doc.movement_type || "").replace(/^MT-/, "");
 	frappe.route_options = {
-		"custom_sap_movement_type": frm.doc.movement_type
+		"custom_sap_movement_type": ["like", code + "%"]
 	};
 	frappe.set_route("List", "Stock Entry");
 }

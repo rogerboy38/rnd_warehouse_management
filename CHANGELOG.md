@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — SAP Movement Type: one entry per movement type in use (TASKS-272, 2026-11-02)
+
+- Stock Entry `custom_sap_movement_type` (Select) now lists all 16 codes in use, `code (description)`: 101, 102, 103, 104, 105, 106, 107, 108, 109, 261, 281, 311, 313, 501, 545, 561. 261/311 keep prod's labels; **561 is `561 (Initial Entry - Stock Balance)` — the string the 42 submitted Stock Entries on prod store** (the `… / Material Receipt` label of `0ca2d4e` would have left them un-editable: a Select value outside `options` throws on every save that is not a cancel; TASKS-272b); the rest take the Movement Type record's own description (313: its name + purpose; 108/109 read `108 (Send to Subcontractor)` and `109 (Stores Movement / Material Issue)` — the records' description text named a Stock Entry Type that contradicted their purpose and was corrected, TASKS-272d); 281 = "Goods Issue for Sampling" (prod's Movement Type Master MT-281; Hugh's ruling 2026-11-03); 501 = "Receipt without Purchase Order" (docs_TECHNICAL_SPECIFICATIONS.md MT-501).
+- `fixtures/movement_type.json`: records `281` and `501` added (501 → Material Receipt; 281 → Material Issue, as 103 and 109 — Hugh's ruling 2026-11-03).
+- One list, `rnd_warehouse_management/sap_movement_types.py`, now feeds `bootinfo.sap_movement_types` and the installer's Movement Type seed (which used to seed 101/261/311 only, keyed by purpose); `tests/test_sap_movement_types.py` asserts the fixture records, the Select options, boot and installer agree.
+- `amb_w_spc/fixtures/custom_field.json` ships the same 25 Stock Entry Custom Fields and syncs after this app at every migrate, so it carries the identical options (its own PR); a change to this file alone is undone in the same migrate.
+- In-app readers compare the leading code (`sap_code()`): the Jinja `format_sap_movement_type`, the approval dashboard's movement-type filter, the approval rule's "view applicable Stock Entries" link. Site-side readers that still compare bare `'261'`/`'311'` are reported in the PR, not changed.
+
+
 All notable changes to the RND Warehouse Management app will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

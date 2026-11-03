@@ -43,7 +43,10 @@ def get_pending_approvals_for_dashboard(user, filters):
 	
 	# Add movement type filter
 	if filters.get("movement_type"):
-		filter_conditions["custom_sap_movement_type"] = filters["movement_type"]
+		# TASKS-272: the field stores "<code> (<label>)" while the filter carries a code (or a Movement Type Master name "MT-<code>")
+		from rnd_warehouse_management.sap_movement_types import sap_code
+		code = sap_code(str(filters["movement_type"]).replace("MT-", ""))
+		filter_conditions["custom_sap_movement_type"] = ["like", f"{code}%"]
 	
 	# Add date filter
 	if filters.get("from_date"):
