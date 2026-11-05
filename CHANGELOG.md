@@ -5,6 +5,10 @@ All notable changes to the RND Warehouse Management app will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-11
+
+- Stock Entry Approval Rule, button "View Applicable Stock Entries": the Stock Entry list is now filtered with an **equality** on the exact `custom_sap_movement_type` option (`<code> (<label>)`, read from the Stock Entry meta), not `like <code>%`. Frappe 16.17.5's filter UI lists `like` as an invalid condition for a Select field and drops it, so 2.3.0 opened an unfiltered list (measured on VPT: "20 of 373" instead of "20 of 42"). A code with no matching option (or an empty Movement Type) opens nothing and shows a message instead of an unfiltered list. JavaScript only: no fixture, hook, DocType, patch or Python change; the 2.3.0 migrate effects are unchanged. Tests: `tests/test_approval_rule_button.py` (needs `node`).
+
 ## [2.3.0] - 2026-11-03
 
 - Stock Entry `custom_sap_movement_type` (Select) now lists all 16 codes in use, `code (description)`: 101, 102, 103, 104, 105, 106, 107, 108, 109, 261, 281, 311, 313, 501, 545, 561. 261/311 keep prod's labels; **561 is `561 (Initial Entry - Stock Balance)` — the string the 42 submitted Stock Entries on prod store** (the `… / Material Receipt` label of `0ca2d4e` would have left them un-editable: a Select value outside `options` throws on every save that is not a cancel; TASKS-272b); the rest take the Movement Type record's own description (313: its name + purpose; 108/109 read `108 (Send to Subcontractor)` and `109 (Stores Movement / Material Issue)` — the records' description text named a Stock Entry Type that contradicted their purpose and was corrected, TASKS-272d); 281 = "Goods Issue for Sampling" (prod's Movement Type Master MT-281; Hugh's ruling 2026-11-03); 501 = "Receipt without Purchase Order" (docs_TECHNICAL_SPECIFICATIONS.md MT-501).
