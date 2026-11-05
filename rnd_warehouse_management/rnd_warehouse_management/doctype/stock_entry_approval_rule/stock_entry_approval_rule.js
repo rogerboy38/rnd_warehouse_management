@@ -118,10 +118,23 @@ function test_conditional_logic(frm) {
 }
 
 function view_applicable_stock_entries(frm) {
-	// TASKS-272: the rule links a Movement Type Master ("MT-<code>"); the Stock Entry field stores "<code> (<label>)"
+	// TASKS-272: the rule links a Movement Type Master ("MT-<code>"); the Stock Entry field stores "<code> (<label>)".
+	// 2.3.1 (TASKS-293): filter with an EQUALITY on the exact Select option. The Desk's filter UI lists `like` as an
+	// invalid condition for a Select field and drops it, so the 2.3.0 ["like", code + "%"] opened an unfiltered list.
+	// The option comes from the Stock Entry meta (what the field really accepts on this site), not from the boot list.
 	const code = String(frm.doc.movement_type || "").replace(/^MT-/, "");
-	frappe.route_options = {
-		"custom_sap_movement_type": ["like", code + "%"]
-	};
-	frappe.set_route("List", "Stock Entry");
+	frappe.model.with_doctype("Stock Entry", () => {
+		const field = (frappe.get_meta("Stock Entry").fields || []).find((f) => f.fieldname === "custom_sap_movement_type");
+		const options = String((field && field.options) || "").split("\n").map((o) => o.trim()).filter(Boolean);
+		const matches = code ? options.filter((o) => o === code || o.startsWith(code + " (")) : [];
+		if (matches.length !== 1) {
+			// never an unfiltered list: say what is wrong and stay on the rule
+			frappe.msgprint(__("No Stock Entry movement type option matches the code {0} of this rule; the list was not opened.", [code || __("(empty)")]));
+			return;
+		}
+		frappe.route_options = {
+			"custom_sap_movement_type": matches[0]
+		};
+		frappe.set_route("List", "Stock Entry");
+	});
 }
