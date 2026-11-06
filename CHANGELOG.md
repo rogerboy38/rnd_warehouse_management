@@ -5,6 +5,12 @@ All notable changes to the RND Warehouse Management app will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-11
+
+- `hooks.py`: removed the include of `warehouse_temperature.js` — `app_include_js` (`/assets/rnd_warehouse_management/js/warehouse_temperature.js`) and the `Warehouse` entry of `doctype_js` (`public/js/warehouse_temperature.js`). The file is in no commit of this repository (added to the hooks by `d640059`, 2026-01-25, never committed), so every Desk page requested it and got a 404. No behaviour change: nothing was ever loaded from it. No fixture, patch, DocType, Python or JS change. Tests: `tests/test_hooks_includes.py`.
+- **Placeholder, not forgotten:** `warehouse_temperature.js` was the placeholder of a Warehouse temperature UI (added to the hooks by `d640059`, 2026-01-25; the file was never committed). It is intentionally NOT recreated here. It is planned for a later phase, to be built and re-registered together with the IoT bot fleet `bot_iot_l01` … `bot_iot_l34` (some of the bots are in warehouses); until then no Desk include points at it. See "Roadmap / placeholders" in the README.
+- Noted, not changed: `d640059` also re-pointed `doctype_js["Warehouse"]` from the existing `public/js/warehouse.js` to the missing file, so `warehouse.js` (a "Warehouse Dashboard" button calling `rnd_warehouse_management.api.get_warehouse_dashboard`, which this repository does not define) has not loaded since 2026-01-25.
+
 ## [2.3.1] - 2026-11
 
 - Stock Entry Approval Rule, button "View Applicable Stock Entries": the Stock Entry list is now filtered with an **equality** on the exact `custom_sap_movement_type` option (`<code> (<label>)`, read from the Stock Entry meta), not `like <code>%`. Frappe 16.17.5's filter UI lists `like` as an invalid condition for a Select field and drops it, so 2.3.0 opened an unfiltered list (measured on VPT: "20 of 373" instead of "20 of 42"). A code with no matching option (or an empty Movement Type) opens nothing and shows a message instead of an unfiltered list. JavaScript only: no fixture, hook, DocType, patch or Python change; the 2.3.0 migrate effects are unchanged. Tests: `tests/test_approval_rule_button.py` (needs `node`).

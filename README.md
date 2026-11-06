@@ -80,6 +80,13 @@ This module integrates with the broader AMB-Wellness ERPNext ecosystem:
 @ai stock balance AMB-Material-001
 ```
 
+## 🗺️ Roadmap / placeholders
+
+- **Warehouse temperature UI — placeholder, not forgotten.** `hooks.py` used to include `warehouse_temperature.js` (commit `d640059`, 2026-01-25). The file was never committed, so the include only produced a 404 on every Desk page and was removed in 2.3.2. The UI is planned for a **later phase**, to be built and re-registered **together with the IoT bot fleet `bot_iot_l01` … `bot_iot_l34`** (some of the bots are in warehouses). Until then no Desk include points at it.
+- **Related, unchanged:** `rnd_warehouse_management/public/js/warehouse.js` has not loaded since `d640059` (that commit re-pointed `doctype_js["Warehouse"]` to the missing file); it calls `rnd_warehouse_management.api.get_warehouse_dashboard`, which this repository does not define. Left for the owner's decision in that phase.
+- **Groundwork already in the repository** (all tracked on `main`, `git ls-files`): `rnd_warehouse_management/utils/temperature.py` (blob `353dab642630`); `rnd_warehouse_management/scripts/migrate_temperature.py` (blob `4141d7a8b012`); `rnd_warehouse_management/warehouse_monitoring.py` (blob `f32a7b994009`); `rnd_warehouse_management/rnd_warehouse_management/warehouse_monitoring.py` (blob `96616ef9b20a`).
+- **Not documented here:** what the bots measure, how they connect to the Warehouse doctype and which warehouse holds which bot — that design belongs to the later phase. The repository has no `bot_iot_*` string anywhere (`git grep`: 0 files); it does mention IoT in, for example, `rnd_warehouse_management/rnd_warehouse_management/iot_pipeline.py`, `rnd_warehouse_management/rnd_warehouse_management/plc_integration.py` (paths only; not read for this note).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
