@@ -34,8 +34,7 @@ website_route_rules = [
 # Include JS and CSS
 app_include_css = ["/assets/rnd_warehouse_management/css/warehouse_management.css"]
 app_include_js = [
-    "/assets/rnd_warehouse_management/js/warehouse_management.js",
-    "/assets/rnd_warehouse_management/js/warehouse_temperature.js"
+    "/assets/rnd_warehouse_management/js/warehouse_management.js"
 ]
 
 web_include_css = []
@@ -44,8 +43,7 @@ web_include_js = []
 # Include Specific DocType Assets
 doctype_js = {
     "Stock Entry": "public/js/stock_entry.js",
-    "Work Order": "public/js/work_order.js",
-    "Warehouse": "public/js/warehouse_temperature.js"
+    "Work Order": "public/js/work_order.js"
 }
 
 doctype_list_js = {
