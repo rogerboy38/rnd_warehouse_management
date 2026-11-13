@@ -40,6 +40,7 @@ def _frappe(has_custom_field, insert_raises=None):
 	)
 	f.get_meta.return_value.has_field.return_value = has_custom_field
 	f.session.user = "u"
+	f.conf = {}
 	# nowdate()/now_datetime() read site settings through the real frappe: keep the tests DB-free
 	patch_time.start()
 	return f, qi
@@ -72,6 +73,20 @@ class TestManufactureHook(unittest.TestCase):
 		self.assertEqual(call.kwargs["title"], "QI Auto-Creation Error")
 		self.assertIn("SE-1", call.kwargs["message"])
 		self.assertIn("boom", call.kwargs["message"])
+
+	def test_switch_off_creates_nothing(self):
+		f, qi = _frappe(False)
+		f.conf = {"rnd_auto_quality_inspection": 0}
+		with mock.patch.object(qa, "frappe", f):
+			qa.create_quality_inspection_on_manufacture(_doc())
+		f.get_doc.assert_not_called()
+		f.log_error.assert_not_called()
+
+	def test_switch_absent_means_on(self):
+		f, qi = _frappe(False)
+		with mock.patch.object(qa, "frappe", f):
+			qa.create_quality_inspection_on_manufacture(_doc())
+		qi.insert.assert_called_once()
 
 	def test_non_manufacture_entry_does_nothing(self):
 		f, qi = _frappe(False)

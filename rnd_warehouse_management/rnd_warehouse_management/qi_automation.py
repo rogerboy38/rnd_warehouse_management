@@ -10,6 +10,11 @@ def create_quality_inspection_on_manufacture(doc, method=None):
     # Only trigger for Manufacture purpose
     if doc.purpose != "Manufacture" and doc.stock_entry_type != "Manufacture":
         return
+
+    # Switch (TASKS-335 D-10): site_config key `rnd_auto_quality_inspection`; absent = on (unchanged),
+    # 0/false = no automatic inspection. No migrate, no DocType; a bench/site-config edit + restart.
+    if not frappe.conf.get("rnd_auto_quality_inspection", 1):
+        return
     
     # Get finished goods items from the stock entry
     for item in doc.items:
