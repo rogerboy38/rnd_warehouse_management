@@ -82,6 +82,13 @@ class TestManufactureHook(unittest.TestCase):
 		f.get_doc.assert_not_called()
 		f.log_error.assert_not_called()
 
+	def test_switch_one_means_on(self):
+		f, qi = _frappe(False)
+		f.conf = {"rnd_auto_quality_inspection": 1}
+		with mock.patch.object(qa, "frappe", f):
+			qa.create_quality_inspection_on_manufacture(_doc())
+		qi.insert.assert_called_once()
+
 	def test_switch_absent_means_on(self):
 		f, qi = _frappe(False)
 		with mock.patch.object(qa, "frappe", f):
