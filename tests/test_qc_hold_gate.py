@@ -14,8 +14,8 @@ PKG = os.path.join(ROOT, "rnd_warehouse_management")
 from rnd_warehouse_management.rnd_warehouse_management import qc_hold_gate as g  # noqa: E402
 
 
-def row(s=None, t=None, batch=None, bundle=None):
-	return {"s_warehouse": s, "t_warehouse": t, "batch_no": batch, "serial_and_batch_bundle": bundle}
+def row(s=None, t=None, batch=None, bundle=None, item="IT"):
+	return {"item_code": item, "s_warehouse": s, "t_warehouse": t, "batch_no": batch, "serial_and_batch_bundle": bundle}
 
 
 class Doc(dict):
@@ -28,7 +28,7 @@ class Doc(dict):
 
 
 def fake_frappe(hold=("QC",), amb_of=None, status_of=None, has_wh_field=True, has_batch_field=True,
-		bundles=None, roles=("Stock User",), amb_doctype=True):
+		bundles=None, roles=("Stock User",), amb_doctype=True, batch_items=("IT",)):
 	"""amb_of: batch -> Batch AMB name; status_of: Batch AMB name -> quality_status."""
 	amb_of, status_of, bundles = amb_of or {}, status_of or {}, bundles or {}
 	f = mock.MagicMock()
@@ -41,6 +41,8 @@ def fake_frappe(hold=("QC",), amb_of=None, status_of=None, has_wh_field=True, ha
 	def get_value(dt, name, field=None, *a, **k):
 		if dt == "Warehouse":
 			return 1 if name in hold else 0
+		if dt == "Item":
+			return 1 if name in batch_items else 0
 		if dt == "Batch":
 			return amb_of.get(name)
 		if dt == "Batch AMB":
@@ -83,8 +85,14 @@ class TestGate(unittest.TestCase):
 	def test_site_without_the_batch_link_field_refuses_a_held_lot(self):
 		self.assertTrue(self.run_gate(Doc([row("QC", "FG", "B1")]), **self.LOT, has_batch_field=False)[0])
 
-	def test_batchless_row_is_not_judged(self):
-		self.assertFalse(self.run_gate(Doc([row("QC", "FG")]))[0])
+	def test_batch_tracked_row_naming_no_lot_is_refused(self):
+		# ERPNext would pick the lot itself while posting the ledger, after this hook
+		refused, f = self.run_gate(Doc([row("QC", "FG")]))
+		self.assertTrue(refused)
+		self.assertIn("no lot is named", f.throw.call_args.args[0])
+
+	def test_row_of_an_item_that_is_not_batch_tracked_is_not_judged(self):
+		self.assertFalse(self.run_gate(Doc([row("QC", "FG", item="PLAIN")]))[0])
 
 	def test_transfer_between_two_hold_warehouses_is_allowed(self):
 		self.assertFalse(self.run_gate(Doc([row("QC", "QC2", "B1")]), hold=("QC", "QC2"), **self.LOT,

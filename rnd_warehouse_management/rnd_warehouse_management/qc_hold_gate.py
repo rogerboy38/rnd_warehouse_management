@@ -12,8 +12,10 @@ meet the same check (a per-write `ignore_permissions` does not skip a doc event)
   * "Out of QC" = the row's source warehouse is a hold warehouse and its target is not (a move between two hold
     warehouses, a return into one, a receipt and a finished-item row stay allowed; a Manufacture row that CONSUMES
     from a hold warehouse is a row like any other).
-  * A lot with no Batch AMB link, or whose Batch AMB is not Passed, is refused (fail closed). A row with no batch
-    at all is not judged: there is no lot to look up.
+  * A lot with no Batch AMB link, or whose Batch AMB is not Passed, is refused (fail closed). A row of a
+    batch-tracked item that names no lot (no batch_no, no bundle) is refused too: ERPNext would pick the lot
+    itself while posting the ledger (Stock Settings "auto create bundle for outward"), after this hook. A row of an
+    item that is not batch-tracked is not judged: there is no lot.
   * Override: only a user holding the role `QC Hold Override`; each overridden submit leaves a Comment on the
     Stock Entry naming the user and the lots.
 """
@@ -76,7 +78,12 @@ def refusals(doc):
 	for row in doc.get("items") or []:
 		if not row_leaves_hold(row, cache):
 			continue
-		for batch in row_batches(row):
+		batches = row_batches(row)
+		if not batches:
+			if frappe.db.get_value("Item", row.get("item_code"), "has_batch_no"):
+				out.append((row.get("item_code"), row.get("s_warehouse"), _("no lot is named on the row")))
+			continue
+		for batch in batches:
 			if (batch, row.get("s_warehouse")) in seen:
 				continue
 			seen.add((batch, row.get("s_warehouse")))
