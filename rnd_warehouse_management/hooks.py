@@ -86,7 +86,7 @@ fixtures = [
     # 2.2.0: masters and the role used by "Work Order Scheduling" (name filters, never bare doctypes)
     {"doctype": "Workflow State",  "filters": [["name", "in", ["Draft", "Scheduled", "Cancelled"]]]},
     {"doctype": "Workflow Action Master", "filters": [["name", "in", ["Schedule", "Cancel"]]]},
-    {"doctype": "Role",            "filters": [["name", "=", "Planeacion"]]},
+    {"doctype": "Role",            "filters": [["name", "in", ["Planeacion", "QC Hold Override"]]]},
     {"doctype": "Notification",    "filters": [["module", "=", "RND"], ["is_standard", "=", 0]]},
 ]
 

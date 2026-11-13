@@ -260,11 +260,14 @@ def before_save(doc, method):
     pass
 
 def before_submit(doc, method):
-    """Hook for before_submit event"""
-    pass
+    """Hook for before_submit event: the QC hold gate (TASKS-337 item 6)"""
+    from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
+    check_qc_hold_release(doc, method)
 
 def on_submit(doc, method):
-    """Hook for on_submit event - Phase 5.2: Auto-create QI on Manufacture"""
+    """Hook for on_submit event - QC hold backstop, then Phase 5.2: Auto-create QI on Manufacture"""
+    from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
+    check_qc_hold_release(doc, method)
     from rnd_warehouse_management.rnd_warehouse_management.qi_automation import create_quality_inspection_on_manufacture
     create_quality_inspection_on_manufacture(doc, method)
 
