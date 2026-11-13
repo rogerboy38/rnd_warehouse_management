@@ -5,6 +5,12 @@ All notable changes to the RND Warehouse Management app will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-11
+
+- **QC hold gate (TASKS-337 item 6, decision 59):** a Stock Entry that takes a lot out of a warehouse flagged `custom_qc_hold` is refused at submit (`before_submit`, with an `on_submit` backstop when validation was skipped) unless that lot's Batch AMB `quality_status` is Passed. A lot with no Batch AMB link, or a batch-tracked row naming no lot, is refused; transfers between two flagged warehouses, returns into one, receipts and finished-item rows are not judged. Override: role `QC Hold Override`, each override leaves an Info Comment on the Stock Entry.
+- **Inert until a warehouse is flagged.** New Custom Field `Warehouse.custom_qc_hold` (Check) and Role `QC Hold Override` ship as fixtures: **migrate needed**. Stock Entry only; Delivery Note and other stock documents are not gated. Group warehouses: flag each leaf.
+- Tests: `tests/test_qc_hold_gate.py`.
+
 ## [2.3.2] - 2026-11
 
 - `hooks.py`: removed the include of `warehouse_temperature.js` — `app_include_js` (`/assets/rnd_warehouse_management/js/warehouse_temperature.js`) and the `Warehouse` entry of `doctype_js` (`public/js/warehouse_temperature.js`). The file is in no commit of this repository (added to the hooks by `d640059`, 2026-01-25, never committed), so every Desk page requested it and got a 404. No behaviour change: nothing was ever loaded from it. No fixture, patch, DocType, Python or JS change. Tests: `tests/test_hooks_includes.py`.
