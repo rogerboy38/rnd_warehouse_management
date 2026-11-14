@@ -273,14 +273,11 @@ class TestWiring(GateCase):
 		self.assertTrue(self.call("before_cancel", Doc([row(None, "QC", "B1")], action="cancel"), **kw))
 		self.assertTrue(self.call("on_cancel", Doc([row(None, "QC", "B1")], action="cancel", ignore_validate=True), **kw))
 
-	def test_the_gate_events_let_a_passed_entry_through(self):
-		kw = dict(**self.LOT, status_of={"A1": "Passed"})
-		self.assertFalse(self.call("before_validate", Doc([row("QC", "FG", "B1")]), **kw))
-		self.assertFalse(self.call("before_cancel", Doc([row(None, "QC", "B1")], action="cancel"), **kw))
-
-	def test_before_submit_no_longer_judges_because_before_validate_does(self):
-		self.assertIn("before_validate", hooks.doc_events["Stock Entry"])
-		self.assertFalse(self.call("before_submit", Doc([row("QC", "FG", "B1")]), **dict(self.LOT, status_of={"A1": "Failed"})))
+	def test_the_hooked_events_let_a_passed_entry_through_and_stop_the_same_entry_failed(self):
+		for status, stops in (("Passed", False), ("Failed", True)):
+			kw = dict(**self.LOT, status_of={"A1": status})
+			self.assertEqual(self.call("before_validate", Doc([row("QC", "FG", "B1")]), **kw), stops)
+			self.assertEqual(self.call("before_cancel", Doc([row(None, "QC", "B1")], action="cancel"), **kw), stops)
 
 	def test_the_warehouse_hook_refuses_a_flagged_group(self):
 		path = hooks.doc_events["Warehouse"]["before_save"]
@@ -297,14 +294,16 @@ class TestWiring(GateCase):
 
 class TestShipping(unittest.TestCase):
 	def test_custom_field_fixture_row_is_selected_by_the_hooks_fixture_filter(self):
-		rows = json.load(open(os.path.join(PKG, "fixtures", "custom_field.json"), encoding="utf-8"))
+		with open(os.path.join(PKG, "fixtures", "custom_field.json"), encoding="utf-8") as fh:
+			rows = json.load(fh)
 		(r,) = [x for x in rows if x["name"] == "Warehouse-custom_qc_hold"]
 		self.assertEqual((r["dt"], r["fieldname"], r["fieldtype"]), ("Warehouse", g.HOLD_FIELD, "Check"))
 		flt = [x for x in hooks.fixtures if x["doctype"] == "Custom Field"][0]["filters"]
 		self.assertIn(["module", "=", r["module"]], flt)
 
 	def test_override_role_row_is_selected_by_the_hooks_fixture_filter(self):
-		roles = json.load(open(os.path.join(PKG, "fixtures", "role.json"), encoding="utf-8"))
+		with open(os.path.join(PKG, "fixtures", "role.json"), encoding="utf-8") as fh:
+			roles = json.load(fh)
 		self.assertIn(g.OVERRIDE_ROLE, [r["name"] for r in roles])
 		flt = [x for x in hooks.fixtures if x["doctype"] == "Role"][0]["filters"]
 		self.assertTrue(any(f[0] == "name" and f[1] == "in" and g.OVERRIDE_ROLE in f[2] for f in flt))
