@@ -68,6 +68,8 @@ doc_events = {
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.work_order.on_submit"
     },
     "Warehouse": {
+        # TASKS-344 H-3: before_validate runs before Frappe honours ignore_validate; before_save does not
+        "before_validate": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_validate",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_save"
     },
     "Quality Inspection": {

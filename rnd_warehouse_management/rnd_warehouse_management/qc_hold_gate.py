@@ -87,13 +87,69 @@ def batch_verdict(batch):
 	return False, _("quality status is {0}").format(status or _("empty")), status or "empty"
 
 
+# ERPNext 16.17.0 `StockEntry.validate_warehouse`: which side a purpose needs. `before_validate` (the gate's first
+# line, the only one `ignore_validate` cannot skip) runs BEFORE that method fills a row's warehouses from the header
+# `from_warehouse` / `to_warehouse`, so the gate resolves them itself, for judging only.
+_SOURCE_MANDATORY = (
+	"Material Issue", "Material Transfer", "Send to Subcontractor", "Material Transfer for Manufacture",
+	"Material Consumption for Manufacture", "Return Raw Material to Customer", "Subcontracting Delivery",
+)
+_TARGET_MANDATORY = (
+	"Material Receipt", "Material Transfer", "Send to Subcontractor", "Material Transfer for Manufacture",
+	"Receive from Customer", "Subcontracting Return",
+)
+
+
+class _EffectiveRow:
+	"""A row as ERPNext will see it after validate_warehouse: same fields, resolved warehouses. Never written back."""
+
+	def __init__(self, row, s_warehouse, t_warehouse):
+		self._row, self._over = row, {"s_warehouse": s_warehouse, "t_warehouse": t_warehouse}
+
+	def get(self, key, default=None):
+		return self._over[key] if key in self._over else self._row.get(key, default)
+
+
+def effective_rows(doc):
+	"""The entry's rows with the warehouses `validate_warehouse` would give them (header fallback, purpose rules,
+	Manufacture / Disassemble with a BOM). Pure: nothing on `doc` is changed."""
+	purpose = doc.get("purpose") or doc.get("stock_entry_type")
+	src_only = purpose in _SOURCE_MANDATORY and purpose not in _TARGET_MANDATORY
+	tgt_only = purpose in _TARGET_MANDATORY and purpose not in _SOURCE_MANDATORY
+	frm = None if tgt_only else doc.get("from_warehouse")
+	to = None if src_only else doc.get("to_warehouse")
+	rows = doc.get("items") or []
+	has_bom = any(r.get("bom_no") for r in rows)
+	out = []
+	for r in rows:
+		s, t = r.get("s_warehouse"), r.get("t_warehouse")
+		if src_only:
+			t = None
+		elif tgt_only:
+			s = None
+		if not s and not t:
+			s, t = frm, to
+		if purpose in _SOURCE_MANDATORY and not s:
+			s = frm
+		if purpose in _TARGET_MANDATORY and not t:
+			t = to
+		if has_bom and purpose in ("Manufacture", "Disassemble"):
+			finished = bool(r.get("is_finished_item") or r.get("type") or r.get("is_legacy_scrap_item"))
+			if (purpose == "Manufacture") == finished:
+				s = None          # a finished / scrap row of a Manufacture (a consumed row of a Disassemble) only receives
+			else:
+				t = None
+		out.append(_EffectiveRow(r, s, t))
+	return out
+
+
 def refusals(doc, reverse=False):
 	"""[(batch, warehouse, why, status, qty)] for every lot the entry takes out of a hold warehouse unjudged or not
-	Passed (`reverse`: as a cancel would)."""
+	Passed (`reverse`: as a cancel would). A submit is judged on the rows as validate_warehouse will leave them."""
 	if not frappe.get_meta("Warehouse").has_field(HOLD_FIELD):
 		return []
 	cache, out, seen = {}, [], {}
-	for row in doc.get("items") or []:
+	for row in (doc.get("items") or []) if reverse else effective_rows(doc):
 		if not row_leaves_hold(row, cache, reverse):
 			continue
 		wh = row.get("t_warehouse") if reverse else row.get("s_warehouse")
@@ -119,10 +175,15 @@ def refusals(doc, reverse=False):
 	return out
 
 
-def _record(doc, action, bad):
-	"""One Info Comment per entry and action: who, what, and per lot its status, quantity and warehouse."""
+def _record(doc, action, bad, method=None):
+	"""One Info Comment per entry and action: who, what, and per lot its status, quantity and warehouse.
+	A submit is recorded at `on_submit` only: at `before_validate` / `before_submit` a document submitted in one call
+	has a name but no row yet (the Comment's link would not validate), and one that is refused later must leave no
+	Comment. A cancel is recorded at `before_cancel` (the row exists)."""
 	flag = f"qc_hold_override_{action}"
 	if doc.flags.get(flag):
+		return
+	if action == "submit" and method != "on_submit":
 		return
 	doc.flags[flag] = True
 	lines = "; ".join(f"{b} (status {st}, qty {frappe.utils.flt(q)}, from {w})" for b, w, _y, st, q in bad)
@@ -158,7 +219,7 @@ def check_qc_hold_release(doc, method=None):
 		return result
 	lines = "\n".join(f"- {b} ({w}): {why}" for b, w, why, _s, _q in bad)
 	if OVERRIDE_ROLE in frappe.get_roles():
-		_record(doc, action, bad)
+		_record(doc, action, bad, method)
 		result["overridden"] = True
 		return result
 	if action == "cancel":

@@ -204,6 +204,50 @@ class TestCancel(GateCase):
 		self.refused(Doc([row(None, "QC", "B1")], action="cancel", ignore_validate=True), "on_cancel", **kw)
 
 
+class TestHeaderOnlyWarehouses(GateCase):
+	"""TASKS-344 H-1: before_validate (the first line, not skipped by ignore_validate) runs before ERPNext's
+	validate_warehouse gives the rows their warehouses from the header; the gate resolves them itself, for judging only."""
+
+	def header_doc(self, purpose, frm=None, to=None, rows=None, **kw):
+		d = Doc(rows if rows is not None else [row(None, None, "B1")], **kw)
+		d.update({"purpose": purpose, "from_warehouse": frm, "to_warehouse": to})
+		return d
+
+	def test_header_only_issue_and_transfer_are_refused_at_the_first_line(self):
+		kw = dict(**self.LOT, status_of={"A1": "Failed"})
+		self.refused(self.header_doc("Material Issue", frm="QC"), "before_validate", **kw)
+		self.refused(self.header_doc("Material Transfer", frm="QC", to="FG"), "before_validate", **kw)
+		self.refused(self.header_doc("Material Issue", frm="QC", ignore_validate=True), "before_validate", **kw)
+
+	def test_the_same_header_only_entries_with_a_passed_lot_leave(self):
+		kw = dict(**self.LOT, status_of={"A1": "Passed"})
+		v = self.leaves(self.header_doc("Material Issue", frm="QC"), "before_validate", **kw)
+		self.assertEqual(v["action"], "submit")
+		self.leaves(self.header_doc("Material Transfer", frm="QC", to="FG"), "before_validate", **kw)
+
+	def test_purpose_rules_of_validate_warehouse_are_followed(self):
+		kw = dict(**self.LOT, status_of={"A1": "Failed"})
+		# a receipt never reads a source: a stray header source does not make it an outgoing move
+		self.leaves(self.header_doc("Material Receipt", frm="QC", to="QC"), "before_validate", **kw)
+		# a transfer between two hold warehouses stays allowed
+		self.leaves(self.header_doc("Material Transfer", frm="QC", to="QC2"), "before_validate", hold=("QC", "QC2"), **dict(kw))
+		# an issue ignores the header target
+		self.refused(self.header_doc("Material Issue", frm="QC", to="QC2"), "before_validate", hold=("QC", "QC2"), **dict(kw))
+
+	def test_manufacture_with_a_bom_consumes_from_the_header_source_and_receives_finished(self):
+		kw = dict(**self.LOT, status_of={"A1": "Failed"})
+		consumed = dict(row(None, None, "B1"), bom_no="BOM-1", is_finished_item=0)
+		finished = dict(row(None, None, "B9"), bom_no="BOM-1", is_finished_item=1)
+		self.refused(self.header_doc("Manufacture", frm="QC", to="FG", rows=[consumed, finished]), "before_validate", **kw)
+		self.leaves(self.header_doc("Manufacture", frm="QC", to="FG", rows=[finished]), "before_validate", **kw)
+
+	def test_judging_does_not_change_the_document(self):
+		d = self.header_doc("Material Issue", frm="QC")
+		g_rows = g.effective_rows(d)
+		self.assertEqual(g_rows[0].get("s_warehouse"), "QC")
+		self.assertIsNone(d["items"][0]["s_warehouse"])
+
+
 class TestOverrideRecord(GateCase):
 	def test_override_role_passes_and_records_status_quantity_and_warehouse_once(self):
 		d = Doc([row("QC", "FG", "B1", qty=7)])
@@ -211,17 +255,30 @@ class TestOverrideRecord(GateCase):
 		v, refused, f = self.gate(d, "before_validate", **kw)
 		self.assertFalse(refused)
 		self.assertTrue(v["overridden"])
+		# TASKS-344 H-4: at before_validate a document submitted in one call has a name but no row yet; the
+		# Comment is written at on_submit, once
+		d.add_comment.assert_not_called()
+		self.gate(d, "on_submit", **kw)
 		d.add_comment.assert_called_once()
 		text = d.add_comment.call_args.args[1]
 		for needle in ("u@x", "submit", "B1", "status Failed", "qty 7.0", "from QC"):
 			self.assertIn(needle, text)
-		# the second line judges again but does not write a second Comment
 		self.gate(d, "on_submit", **kw)
 		d.add_comment.assert_called_once()
 
+	def test_a_submit_refused_later_leaves_no_override_comment_and_a_cancel_records_at_before_cancel(self):
+		d = Doc([row("QC", "FG", "B1")])
+		kw = dict(**self.LOT, status_of={"A1": "Failed"}, roles=(g.OVERRIDE_ROLE,))
+		self.gate(d, "before_validate", **kw)
+		self.gate(d, "before_submit", **kw)
+		d.add_comment.assert_not_called()
+		c = Doc([row(None, "QC", "B1")], action="cancel")
+		self.gate(c, "before_cancel", **kw)
+		c.add_comment.assert_called_once()
+
 	def test_an_unlinked_lot_is_recorded_as_no_batch_amb(self):
 		d = Doc([row("QC", "FG", "B1")])
-		self.gate(d, "before_validate", roles=(g.OVERRIDE_ROLE,))
+		self.gate(d, "on_submit", roles=(g.OVERRIDE_ROLE,))
 		self.assertIn("status no Batch AMB", d.add_comment.call_args.args[1])
 
 	def test_without_the_role_nothing_is_recorded(self):
@@ -280,7 +337,11 @@ class TestWiring(GateCase):
 			self.assertEqual(self.call("before_cancel", Doc([row(None, "QC", "B1")], action="cancel"), **kw), stops)
 
 	def test_the_warehouse_hook_refuses_a_flagged_group(self):
-		path = hooks.doc_events["Warehouse"]["before_save"]
+		for event in ("before_save", "before_validate"):     # before_validate survives ignore_validate (TASKS-344 H-3)
+			self.assertTrue(self.refuses_group(event), event)
+
+	def refuses_group(self, event):
+		path = hooks.doc_events["Warehouse"][event]
 		mod, _, fn = path.rpartition(".")
 		before_save = getattr(importlib.import_module(mod), fn)
 		d = types.SimpleNamespace(name="WH-1", custom_qc_hold=1, is_group=1)
@@ -288,8 +349,11 @@ class TestWiring(GateCase):
 		f = mock.MagicMock()
 		f.throw.side_effect = RuntimeError
 		with mock.patch.object(g, "frappe", f), mock.patch.object(g, "_", lambda s: s):
-			with self.assertRaises(RuntimeError):
-				before_save(d, "before_save")
+			try:
+				before_save(d, event)
+				return False
+			except RuntimeError:
+				return True
 
 
 class TestShipping(unittest.TestCase):
