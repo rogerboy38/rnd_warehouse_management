@@ -40,6 +40,10 @@ HOLD_FIELD = "custom_qc_hold"
 BATCH_AMB_FIELD = "custom_batch_amb"
 PASSED = "Passed"
 OVERRIDE_ROLE = "QC Hold Override"
+# Decision 94 (TASKS-349): only these roles may set or clear the hold flag of a Warehouse. `QC Hold Override` is NOT
+# one of them: it lets a person release lots through a Stock Entry (one record per release), it does not let them
+# lift the hold of a whole warehouse. Administrator holds every role, so it passes as System Manager.
+HOLD_FLAG_ROLES = ("Quality Manager", "System Manager")
 
 
 def _hold_flag(warehouse, cache):
@@ -227,6 +231,29 @@ def check_qc_hold_release(doc, method=None):
 	else:
 		msg = _("Lots in a QC hold warehouse can leave it only when their Batch AMB quality status is Passed:")
 	frappe.throw(msg + "\n" + lines, title=_("QC hold"))
+
+
+def check_hold_flag_change(doc, method=None):
+	"""Warehouse `before_validate` hook (decision 94). A change of `custom_qc_hold` in either direction, and a new
+	Warehouse inserted with the flag set, needs Quality Manager or System Manager. A save that does not touch the
+	flag is not judged. It runs at before_validate, which Frappe runs for a save BEFORE it honours `ignore_validate`
+	(a per-write `ignore_permissions` does not skip a doc event either). Returns {"judged", "was", "now"} so a test
+	can see that the hook really decided. Not covered: `frappe.db.set_value`/`db_set`/SQL, which run no doc event."""
+	if not frappe.get_meta("Warehouse").has_field(HOLD_FIELD):
+		return None
+	now = 1 if doc.get(HOLD_FIELD) else 0
+	is_new = doc.is_new() if callable(getattr(doc, "is_new", None)) else not doc.get("name")
+	was = 0 if is_new else (1 if frappe.db.get_value("Warehouse", doc.name, HOLD_FIELD) else 0)
+	if was == now:
+		return {"judged": False, "was": was, "now": now}
+	if set(HOLD_FLAG_ROLES) & set(frappe.get_roles()):
+		return {"judged": True, "was": was, "now": now}
+	frappe.throw(
+		_("Only {0} may {1} \"QC Hold Warehouse\" on a Warehouse: it applies or lifts the hold for every lot in it.").format(
+			_(" or ").join(HOLD_FLAG_ROLES), _("set") if now else _("clear")),
+		frappe.PermissionError,
+		title=_("QC hold"),
+	)
 
 
 def warn_group_flag(doc, method=None):

@@ -3,9 +3,10 @@ from frappe import _
 from frappe.utils import flt
 
 def before_validate(doc, method=None):
-	"""First line for the group-flag refusal: Frappe runs before_validate for a save before it honours
+	"""First line for the hold-flag role check (decision 94) and the group-flag refusal: Frappe runs before_validate for a save before it honours
 	`ignore_validate`, which skips before_save (TASKS-344 H-3)."""
-	from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import warn_group_flag
+	from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_hold_flag_change, warn_group_flag
+	check_hold_flag_change(doc, method)   # decision 94 (TASKS-349): who may set or clear the hold flag
 	warn_group_flag(doc, method)
 
 def before_save(doc, method=None):

@@ -306,6 +306,85 @@ class TestGroupWarehouse(unittest.TestCase):
 			f.throw.assert_not_called()
 
 
+class TestHoldFlagRoles(unittest.TestCase):
+	"""Decision 94 (TASKS-349): who may set or clear `custom_qc_hold` on a Warehouse. Each test here fails when
+	`check_hold_flag_change` is emptied or taken out of the Warehouse before_validate hook."""
+
+	def wh(self, now, was=None, new=False):
+		d = types.SimpleNamespace(name=None if new else "WH-1", custom_qc_hold=now, is_group=0)
+		d.get = lambda k, default=None: getattr(d, k, default)
+		d.is_new = lambda: new
+		d._was = was
+		return d
+
+	def run_hook(self, d, roles, via_hooks=True, has_field=True):
+		f = mock.MagicMock()
+		f.get_roles.return_value = list(roles)
+		f.PermissionError = PermissionError
+		f.get_meta.return_value.has_field.return_value = has_field
+		f.db.get_value.side_effect = lambda dt, name, field=None, *a, **k: d._was
+		f.throw.side_effect = lambda msg, exc=None, **k: (_ for _ in ()).throw((exc or RuntimeError)(msg))
+		with mock.patch.object(g, "frappe", f), mock.patch.object(g, "_", lambda s: s):
+			if via_hooks:
+				mod, _, fn = hooks.doc_events["Warehouse"]["before_validate"].rpartition(".")
+				fnc = getattr(importlib.import_module(mod), fn)
+				try:
+					fnc(d, "before_validate")
+					return "allowed", f
+				except PermissionError:
+					return "refused", f
+			return g.check_hold_flag_change(d), f
+
+	def test_the_two_roles_may_set_and_clear(self):
+		for role in ("Quality Manager", "System Manager"):
+			self.assertEqual(self.run_hook(self.wh(1, was=0), [role])[0], "allowed", role)
+			self.assertEqual(self.run_hook(self.wh(0, was=1), [role])[0], "allowed", role)
+			v, _f = self.run_hook(self.wh(1, was=0), [role], via_hooks=False)
+			self.assertEqual((v["judged"], v["was"], v["now"]), (True, 0, 1))
+
+	def test_administrator_holds_every_role_so_it_passes_as_system_manager(self):
+		roles = ["Administrator", "System Manager", "Quality Manager", "Stock User", "QC Hold Override"]
+		self.assertEqual(self.run_hook(self.wh(1, was=0), roles)[0], "allowed")
+
+	def test_a_stock_user_is_refused_on_set_on_clear_and_on_insert(self):
+		for label, d in (("set", self.wh(1, was=0)), ("clear", self.wh(0, was=1)), ("insert", self.wh(1, new=True))):
+			self.assertEqual(self.run_hook(d, ["Stock User", "Item Manager"])[0], "refused", label)
+
+	def test_the_override_role_alone_does_not_open_the_flag(self):
+		self.assertEqual(self.run_hook(self.wh(0, was=1), [g.OVERRIDE_ROLE, "Stock User"])[0], "refused")
+
+	def test_the_refusal_names_the_two_roles_and_says_what_it_does(self):
+		d = self.wh(0, was=1)
+		_r, f = self.run_hook(d, ["Stock User"])
+		msg = f.throw.call_args.args[0]
+		self.assertIn("Quality Manager", msg)
+		self.assertIn("System Manager", msg)
+		self.assertIn("clear", msg)
+
+	def test_a_save_that_does_not_touch_the_flag_is_not_judged(self):
+		for now, was in ((1, 1), (0, 0)):
+			v, f = self.run_hook(self.wh(now, was=was), ["Stock User"], via_hooks=False)
+			self.assertEqual((v["judged"], v["was"], v["now"]), (False, was, now))
+			f.throw.assert_not_called()
+		self.assertEqual(self.run_hook(self.wh(0, new=True), ["Stock User"])[0], "allowed")   # a new Warehouse without the flag
+
+	def test_an_existing_warehouse_is_compared_with_the_database_not_with_the_loaded_copy(self):
+		d = self.wh(0, was=1)
+		_r, f = self.run_hook(d, ["Stock User"])
+		f.db.get_value.assert_called_with("Warehouse", "WH-1", g.HOLD_FIELD)
+
+	def test_without_the_field_on_the_site_the_hook_does_nothing(self):
+		self.assertIsNone(self.run_hook(self.wh(1, was=0), ["Stock User"], via_hooks=False, has_field=False)[0])
+
+	def test_the_hook_is_the_before_validate_of_a_warehouse_and_runs_before_the_group_check(self):
+		"""before_validate runs for a save before Frappe honours `ignore_validate`: the refusal does not depend on it."""
+		self.assertIn("before_validate", hooks.doc_events["Warehouse"])
+		src = open(os.path.join(PKG, "rnd_warehouse_management", "warehouse.py"), encoding="utf-8").read()
+		bv = src[src.index("def before_validate"):src.index("def before_save")]
+		self.assertLess(bv.index("check_hold_flag_change"), bv.index("warn_group_flag"))
+		self.assertNotIn("ignore_validate", bv.replace("`ignore_validate`", ""))
+
+
 class TestWiring(GateCase):
 	"""Through the real hooks.py and the real wrapper modules: unhook an event and its test fails."""
 
