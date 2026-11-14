@@ -54,10 +54,12 @@ doctype_list_js = {
 doc_events = {
     "Stock Entry": {
         "before_insert": "rnd_warehouse_management.rnd_warehouse_management.workflow_utils.reset_workflow_state_on_amend",
+        "before_validate": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_validate",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_save",
         "before_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_submit",
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_submit",
         "before_cancel": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_cancel",
+        "on_cancel": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_cancel",
         "on_update_after_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_update_after_submit"
     },
     "Work Order": {

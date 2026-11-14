@@ -4,6 +4,8 @@ from frappe.utils import flt
 
 def before_save(doc, method=None):
 	"""Hook: Before saving Warehouse"""
+	from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import warn_group_flag
+	warn_group_flag(doc, method)
 	validate_warehouse_configuration(doc)
 	set_default_transit_warehouse(doc)
 	update_temperature_settings(doc)

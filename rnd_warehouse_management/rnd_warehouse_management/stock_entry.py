@@ -259,21 +259,32 @@ def before_save(doc, method):
     # This wrapper is needed because doc_events expects module-level functions
     pass
 
-def before_submit(doc, method):
-    """Hook for before_submit event: the QC hold gate (TASKS-337 item 6)"""
+def before_validate(doc, method):
+    """QC hold gate, first line for a submit: Frappe runs before_validate for save and submit BEFORE it honours
+    `doc.flags.ignore_validate`, so this one is not skipped by a caller that turned validation off (TASKS-342)."""
     from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
     check_qc_hold_release(doc, method)
 
+def before_submit(doc, method):
+    """Hook for before_submit event (the QC hold gate now runs at before_validate)"""
+    pass
+
 def on_submit(doc, method):
-    """Hook for on_submit event - QC hold backstop, then Phase 5.2: Auto-create QI on Manufacture"""
+    """Hook for on_submit event - QC hold second line, then Phase 5.2: Auto-create QI on Manufacture"""
     from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
     check_qc_hold_release(doc, method)
     from rnd_warehouse_management.rnd_warehouse_management.qi_automation import create_quality_inspection_on_manufacture
     create_quality_inspection_on_manufacture(doc, method)
 
 def before_cancel(doc, method):
-    """Hook for before_cancel event"""
-    pass
+    """Hook for before_cancel event: QC hold gate for a cancel that takes a lot out of a hold warehouse"""
+    from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
+    check_qc_hold_release(doc, method)
+
+def on_cancel(doc, method):
+    """Hook for on_cancel event: QC hold second line, only when ignore_validate skipped before_cancel"""
+    from rnd_warehouse_management.rnd_warehouse_management.qc_hold_gate import check_qc_hold_release
+    check_qc_hold_release(doc, method)
 
 def on_update_after_submit(doc, method):
     """Hook for on_update_after_submit event"""
