@@ -15,6 +15,11 @@ The rows it creates (and whether it copied the standard rows) are recorded in a 
 exactly those and nothing else. `rollback()` is the way back: `bench --site <site> execute
 rnd_warehouse_management.patches.v2_4.hold_flag_permlevel.rollback`, then deploy the older code and migrate (the older
 fixture puts the field back to permlevel 0). Idempotent: running `execute` twice adds nothing.
+
+Applying it again after a way back (TASKS-353 decision 108): `rollback()` also removes this patch's own Patch Log row.
+Frappe runs a patch line only when no Patch Log row holds that exact string, so the next migrate of this code runs
+`execute` again and the level-1 rows come back together with the field level, with no step by hand. Without that, the
+fixture would put the field at level 1 while the patch stayed "already run": a level-1 field with no level-1 rows.
 """
 
 import json
@@ -25,6 +30,7 @@ DOCTYPE = "Warehouse"
 FIELD = "custom_qc_hold"
 EDIT_ROLES = ("Quality Manager", "System Manager")
 STATE_KEY = "rnd_hold_flag_docperms"
+PATCH_NAME = "rnd_warehouse_management.patches.v2_4.hold_flag_permlevel"   # the line in patches.txt = Patch Log.patch
 
 
 def plan(level0_rows, level1_rows):
@@ -88,6 +94,7 @@ def rollback():
 	code is migrated (its fixture says 0); this also sets it now."""
 	raw = frappe.db.get_default(STATE_KEY)
 	if not raw:
+		_forget_patch()     # nothing of ours on the site; make sure a later migrate of this code runs the patch
 		return "nothing recorded: nothing removed"
 	state = json.loads(raw)
 	for name in state.get("added", []):
@@ -102,5 +109,11 @@ def rollback():
 	if frappe.db.exists("Custom Field", f"{DOCTYPE}-{FIELD}"):
 		frappe.db.set_value("Custom Field", f"{DOCTYPE}-{FIELD}", "permlevel", 0)
 	frappe.db.delete("DefaultValue", {"parent": "__default", "defkey": STATE_KEY})
+	_forget_patch()
 	frappe.clear_cache(doctype=DOCTYPE)
 	return f"removed {len(state.get('added', []))} rows, undid {len(state.get('upgraded', []))} upgrades, copy removed: {bool(state.get('base_copied'))}"
+
+
+def _forget_patch():
+	"""Decision 108: after a way back the patch must run again at the next migrate of this code."""
+	frappe.db.delete("Patch Log", {"patch": PATCH_NAME})
