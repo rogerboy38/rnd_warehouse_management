@@ -3817,7 +3817,7 @@
   "no_copy": 0,
   "non_negative": 0,
   "options": null,
-  "permlevel": 0,
+  "permlevel": 1,
   "placeholder": null,
   "precision": null,
   "print_hide": 0,
