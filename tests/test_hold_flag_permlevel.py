@@ -88,7 +88,8 @@ class FakeSite:
 		self.n = 0
 		for r in custom_rows or []:
 			self._add(dict(r))
-		self.defaults = {}
+		self.defaults = {}          # what the database holds
+		self.defaults_cache = {}    # what frappe.db.get_default answers from, until the cache is dropped
 		self.patch_log = set()
 		self.field_level = 0
 		self.executions = 0
@@ -133,15 +134,24 @@ class FakeSite:
 			if dt == "Patch Log":
 				site.patch_log.discard(filters["patch"])
 			elif dt == "DefaultValue":
-				site.defaults.pop(filters["defkey"], None)
+				site.defaults.pop(filters["defkey"], None)      # the row only: Frappe's cache still answers
+
+		def set_default(k, v):
+			site.defaults[k] = v
+			site.defaults_cache = dict(site.defaults)       # frappe.db.set_default drops the cache
+
+		def clear_default(key=None, parent=None, **kw):
+			site.defaults.pop(key, None)
+			site.defaults_cache = dict(site.defaults)       # frappe.defaults.clear_default drops it too
 
 		f.db.exists.side_effect = exists
 		f.get_all.side_effect = get_all
 		f.new_doc.side_effect = new_doc
 		f.db.set_value.side_effect = set_value
 		f.db.delete.side_effect = delete
-		f.db.get_default.side_effect = lambda k: site.defaults.get(k)
-		f.db.set_default.side_effect = lambda k, v: site.defaults.__setitem__(k, v)
+		f.db.get_default.side_effect = lambda k: site.defaults_cache.get(k)
+		f.db.set_default.side_effect = set_default
+		f.defaults.clear_default.side_effect = clear_default
 		f.delete_doc.side_effect = lambda dt, name, **k: site.custom.pop(name, None)
 		return f
 

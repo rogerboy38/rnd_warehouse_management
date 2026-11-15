@@ -25,6 +25,7 @@ fixture would put the field at level 1 while the patch stayed "already run": a l
 import json
 
 import frappe
+import frappe.defaults
 
 DOCTYPE = "Warehouse"
 FIELD = "custom_qc_hold"
@@ -108,7 +109,9 @@ def rollback():
 			frappe.delete_doc("Custom DocPerm", name, ignore_permissions=True, force=True)
 	if frappe.db.exists("Custom Field", f"{DOCTYPE}-{FIELD}"):
 		frappe.db.set_value("Custom Field", f"{DOCTYPE}-{FIELD}", "permlevel", 0)
-	frappe.db.delete("DefaultValue", {"parent": "__default", "defkey": STATE_KEY})
+	# through frappe.defaults, which also drops the cached copy: a plain delete of the row leaves the record in the
+	# cache, and a second way back would act on it (found by the real-migrate run of TASKS-353)
+	frappe.defaults.clear_default(key=STATE_KEY, parent="__default")
 	_forget_patch()
 	frappe.clear_cache(doctype=DOCTYPE)
 	return f"removed {len(state.get('added', []))} rows, undid {len(state.get('upgraded', []))} upgrades, copy removed: {bool(state.get('base_copied'))}"
