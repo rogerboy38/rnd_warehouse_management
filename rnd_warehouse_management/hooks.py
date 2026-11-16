@@ -54,10 +54,12 @@ doctype_list_js = {
 doc_events = {
     "Stock Entry": {
         "before_insert": "rnd_warehouse_management.rnd_warehouse_management.workflow_utils.reset_workflow_state_on_amend",
+        "before_validate": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_validate",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_save",
         "before_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_submit",
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_submit",
         "before_cancel": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.before_cancel",
+        "on_cancel": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_cancel",
         "on_update_after_submit": "rnd_warehouse_management.rnd_warehouse_management.stock_entry.on_update_after_submit"
     },
     "Work Order": {
@@ -66,6 +68,8 @@ doc_events = {
         "on_submit": "rnd_warehouse_management.rnd_warehouse_management.work_order.on_submit"
     },
     "Warehouse": {
+        # TASKS-344 H-3: before_validate runs before Frappe honours ignore_validate; before_save does not
+        "before_validate": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_validate",
         "before_save": "rnd_warehouse_management.rnd_warehouse_management.warehouse.before_save"
     },
     "Quality Inspection": {
@@ -86,7 +90,7 @@ fixtures = [
     # 2.2.0: masters and the role used by "Work Order Scheduling" (name filters, never bare doctypes)
     {"doctype": "Workflow State",  "filters": [["name", "in", ["Draft", "Scheduled", "Cancelled"]]]},
     {"doctype": "Workflow Action Master", "filters": [["name", "in", ["Schedule", "Cancel"]]]},
-    {"doctype": "Role",            "filters": [["name", "=", "Planeacion"]]},
+    {"doctype": "Role",            "filters": [["name", "in", ["Planeacion", "QC Hold Override"]]]},
     {"doctype": "Notification",    "filters": [["module", "=", "RND"], ["is_standard", "=", 0]]},
 ]
 

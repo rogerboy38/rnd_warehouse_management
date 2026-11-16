@@ -9,5 +9,16 @@
   "restrict_to_domain": null,
   "role_name": "Planeacion",
   "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 1,
+  "name": "QC Hold Override",
+  "restrict_to_domain": null,
+  "role_name": "QC Hold Override",
+  "two_factor_auth": 0
  }
 ]
