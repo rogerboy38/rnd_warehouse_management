@@ -303,7 +303,11 @@ class TestGroupWarehouse(unittest.TestCase):
 			f.throw.reset_mock()
 			g.warn_group_flag(self.wh(custom_qc_hold=1, is_group=0))
 			g.warn_group_flag(self.wh(custom_qc_hold=0, is_group=1))
+			g.warn_group_flag(self.wh(custom_qc_hold="0", is_group=1))      # TASKS-361 H-A: the text "0" is not a flag
+			g.warn_group_flag(self.wh(custom_qc_hold=1, is_group="0"))
 			f.throw.assert_not_called()
+			with self.assertRaises(RuntimeError):
+				g.warn_group_flag(self.wh(custom_qc_hold="1", is_group="1"))
 
 
 class TestHoldFlagRoles(unittest.TestCase):
@@ -367,6 +371,17 @@ class TestHoldFlagRoles(unittest.TestCase):
 			self.assertEqual((v["judged"], v["was"], v["now"]), (False, was, now))
 			f.throw.assert_not_called()
 		self.assertEqual(self.run_hook(self.wh(0, new=True), ["Stock User"])[0], "allowed")   # a new Warehouse without the flag
+
+	def test_the_flag_sent_as_text_is_read_as_its_number(self):
+		"""TASKS-361 H-A: the text "0" is not empty, so `if value` took it for set and a clear went through unjudged."""
+		for sent, was, expect in (("0", 1, "refused"), ("1", 0, "refused"), (0, 1, "refused"), ("0", 0, "allowed"), ("1", 1, "allowed"), ("", 1, "refused"), (None, 1, "refused")):
+			self.assertEqual(self.run_hook(self.wh(sent, was=was), ["Stock User", "Item Manager"])[0], expect, f"sent {sent!r}, stored {was}")
+		v, _f = self.run_hook(self.wh("0", was=1), ["Quality Manager"], via_hooks=False)
+		self.assertEqual((v["judged"], v["was"], v["now"]), (True, 1, 0))
+		# the stored value arriving as text is read the same way
+		self.assertEqual(self.run_hook(self.wh(0, was="0"), ["Stock User"])[0], "allowed")
+		self.assertEqual(self.run_hook(self.wh("0", new=True), ["Stock User"])[0], "allowed")      # a new Warehouse sent with "0"
+		self.assertEqual(self.run_hook(self.wh("1", new=True), ["Stock User"])[0], "refused")
 
 	def test_an_existing_warehouse_is_compared_with_the_database_not_with_the_loaded_copy(self):
 		d = self.wh(0, was=1)

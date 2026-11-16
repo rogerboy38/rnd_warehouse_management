@@ -35,6 +35,7 @@ posts stock without a Stock Entry; amend of a Stock Entry is a cancel plus a new
 
 import frappe
 from frappe import _
+from frappe.utils import cint
 
 HOLD_FIELD = "custom_qc_hold"
 BATCH_AMB_FIELD = "custom_batch_amb"
@@ -50,7 +51,7 @@ def _hold_flag(warehouse, cache):
 	if not warehouse:
 		return False
 	if warehouse not in cache:
-		cache[warehouse] = bool(frappe.db.get_value("Warehouse", warehouse, HOLD_FIELD))
+		cache[warehouse] = bool(cint(frappe.db.get_value("Warehouse", warehouse, HOLD_FIELD)))
 	return cache[warehouse]
 
 
@@ -241,9 +242,10 @@ def check_hold_flag_change(doc, method=None):
 	can see that the hook really decided. Not covered: `frappe.db.set_value`/`db_set`/SQL, which run no doc event."""
 	if not frappe.get_meta("Warehouse").has_field(HOLD_FIELD):
 		return None
-	now = 1 if doc.get(HOLD_FIELD) else 0
+	# cint, not truth: a client can send the value as text, and the text "0" is not empty (TASKS-361 H-A)
+	now = 1 if cint(doc.get(HOLD_FIELD)) else 0
 	is_new = doc.is_new() if callable(getattr(doc, "is_new", None)) else not doc.get("name")
-	was = 0 if is_new else (1 if frappe.db.get_value("Warehouse", doc.name, HOLD_FIELD) else 0)
+	was = 0 if is_new else (1 if cint(frappe.db.get_value("Warehouse", doc.name, HOLD_FIELD)) else 0)
 	if was == now:
 		return {"judged": False, "was": was, "now": now}
 	if set(HOLD_FLAG_ROLES) & set(frappe.get_roles()):
@@ -259,7 +261,7 @@ def check_hold_flag_change(doc, method=None):
 def warn_group_flag(doc, method=None):
 	"""Warehouse hook: the gate judges the exact warehouse a row names and does not follow a group's children, so a
 	flag on a group would silently do nothing. Refuse it with a message that says what to do."""
-	if doc.get(HOLD_FIELD) and doc.get("is_group"):
+	if cint(doc.get(HOLD_FIELD)) and cint(doc.get("is_group")):
 		frappe.throw(
 			_("{0} is a group warehouse: the QC hold gate judges the warehouse a row names and does not follow a group's children. Untick \"QC Hold Warehouse\" here and flag each leaf warehouse instead.").format(doc.name or doc.get("warehouse_name")),
 			title=_("QC hold"),

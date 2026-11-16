@@ -88,6 +88,8 @@ class FakeSite:
 		self.n = 0
 		for r in custom_rows or []:
 			self._add(dict(r))
+		self.roles = {"Stock User", "Item Manager", "Quality Manager", "System Manager", "Planeacion"}
+		self.log = []
 		self.defaults = {}          # what the database holds
 		self.defaults_cache = {}    # what frappe.db.get_default answers from, until the cache is dropped
 		self.patch_log = set()
@@ -112,16 +114,34 @@ class FakeSite:
 				return name in site.custom
 			if dt == "Custom Field":
 				return True
+			if dt == "Role":
+				return name in site.roles
 			return False
 
+		def match(r, filters):
+			for k, v in (filters or {}).items():
+				if k == "parent":
+					continue
+				if isinstance(v, list) and v and v[0] == "in":
+					if r.get(k) not in v[1]:
+						return False
+				elif r.get(k) != v:
+					return False
+			return True
+
 		def get_all(dt, filters=None, fields=None, pluck=None):
-			rows = [r for r in site.custom.values() if all(r.get(k, "Warehouse" if k == "parent" else None) == v for k, v in (filters or {}).items())]
-			return [r["name"] for r in rows] if pluck else [types.SimpleNamespace(**r).__dict__ for r in rows]
+			src = site.custom.values() if dt == "Custom DocPerm" else site.standard if dt == "DocPerm" else []
+			rows = [dict(r) for r in src if match(r, filters)]
+			return [r["name"] for r in rows] if pluck else rows
 
 		def new_doc(dt):
 			d = types.SimpleNamespace(data={})
 			d.update = lambda v: d.data.update(v)
-			d.insert = lambda **k: setattr(d, "name", site._add({k2: v for k2, v in d.data.items() if k2 in ("role", "permlevel", "read", "write", "if_owner")}))
+			def insert(**k):
+				if d.data.get("role") not in site.roles:       # what Frappe does: the Link to Role does not resolve
+					raise RuntimeError(f"LinkValidationError: Could not find Role: {d.data.get('role')}")
+				d.name = site._add({k2: v for k2, v in d.data.items() if k2 in ("role", "permlevel", "read", "write", "if_owner")})
+			d.insert = insert
 			return d
 
 		def set_value(dt, name, field, value):
@@ -144,6 +164,7 @@ class FakeSite:
 			site.defaults.pop(key, None)
 			site.defaults_cache = dict(site.defaults)       # frappe.defaults.clear_default drops it too
 
+		f.logger.return_value.warning.side_effect = site.log.append
 		f.db.exists.side_effect = exists
 		f.get_all.side_effect = get_all
 		f.new_doc.side_effect = new_doc
@@ -263,6 +284,84 @@ class TestApplyAgainAfterAWayBack(unittest.TestCase):
 		s.migrate()
 		s.way_back()
 		self.assertEqual(s.patch_log, {"rnd_warehouse_management.patches.v1_0.setup_custom_roles"})
+
+
+class TestRound9a(unittest.TestCase):
+	"""TASKS-361: P-B (a row whose role no longer exists) and P-A (the way back removes only the patch's own rows)."""
+
+	def test_pb_a_row_of_a_vanished_role_does_not_stop_the_patch_and_is_left_as_it_is(self):
+		gone = dict(role="Borrado", permlevel=0, read=1, write=1, if_owner=0)
+		for label, s in (("shadow rows", FakeSite(SHADOW + [gone])),):
+			before = [r for r in s.custom.values() if r["role"] == "Borrado"]
+			s.migrate()                                       # must not raise
+			after = [r for r in s.custom.values() if r["role"] == "Borrado"]
+			self.assertEqual(after, before, "the row of the vanished role was touched")
+			self.assertNotIn("Borrado", {r[0] for r in s.level1()}, "a level-1 row was made for a role that does not exist")
+			self.assertTrue(s.consistent() and s.field_level == 1, label)
+			self.assertEqual({("Stock User", 1, 0), ("Planeacion", 1, 0)} - set(s.level1()), set(), "the other readers lost their level-1 row")
+			named = [l for l in s.log if "Borrado" in l]
+			self.assertEqual(len(named), 1, s.log)            # one log line, and it names the role
+			s.way_back()
+			self.assertEqual([r for r in s.custom.values() if r["role"] == "Borrado"], before)
+
+	def test_pb_an_edit_role_that_does_not_exist_is_skipped_not_fatal(self):
+		s = FakeSite(SHADOW)
+		s.roles.discard("Quality Manager")
+		s.migrate()
+		self.assertIn(("System Manager", 1, 1), s.level1())
+		self.assertNotIn("Quality Manager", {r[0] for r in s.level1()})
+		self.assertTrue(any("Quality Manager" in l for l in s.log))
+
+	def test_pa_a_row_added_by_hand_after_the_patch_survives_the_way_back(self):
+		s = FakeSite()                                        # no Custom DocPerm row before the patch
+		s.migrate()
+		self.assertEqual(len(s.level0()), 2)                  # the copy of the standard rows
+		hand = s._add(dict(role="Planeacion", permlevel=0, read=1, write=0, if_owner=0))
+		out = s.way_back()
+		self.assertIn(hand, s.custom, "the way back removed a row a person added")
+		self.assertEqual(s.level1(), [])                      # the patch's own level-1 rows are gone
+		self.assertEqual(s.field_level, 0)
+		self.assertEqual(len(s.level0()), 3, "the copy must stay: alone, the hand-made row would replace the standard rows")
+		self.assertIn("KEPT", out)
+		s.migrate()                                           # decision 108 still holds
+		self.assertTrue(s.consistent() and s.field_level == 1)
+		self.assertIn(("Planeacion", 1, 0), s.level1())
+		self.assertEqual(s.executions, 2)
+
+	def test_pa_a_copied_row_changed_by_hand_keeps_the_copy(self):
+		s = FakeSite()
+		s.migrate()
+		name = next(n for n, r in s.custom.items() if r["role"] == "Stock User" and r["permlevel"] == 0)
+		s.custom[name]["write"] = 1                           # a person gives Stock User write
+		s.way_back()
+		self.assertEqual(s.custom[name]["write"], 1)
+		self.assertEqual(len(s.level0()), 2)
+
+	def test_pa_an_untouched_copy_is_removed_and_the_site_is_on_the_standard_rows_again(self):
+		s = FakeSite()
+		s.migrate()
+		out = s.way_back()
+		self.assertEqual(s.custom, {})
+		self.assertIn("copy removed", out)
+
+	def test_pa_a_record_written_by_the_older_patch_has_no_list_and_still_never_removes_a_hand_row(self):
+		s = FakeSite()
+		s.migrate()
+		rec = json.loads(s.defaults[P.STATE_KEY]); rec.pop("copied"); s.defaults[P.STATE_KEY] = json.dumps(rec); s.defaults_cache = dict(s.defaults)
+		hand = s._add(dict(role="Planeacion", permlevel=0, read=1, write=0, if_owner=0))
+		s.way_back()
+		self.assertIn(hand, s.custom)
+		self.assertEqual(len(s.level0()), 3)
+
+	def test_pa_on_a_site_that_had_its_own_rows_nothing_but_the_level_one_rows_goes(self):
+		s = FakeSite(SHADOW)
+		before0 = s.level0()
+		s.migrate()
+		hand = s._add(dict(role="Item Manager", permlevel=0, read=1, write=1, if_owner=0))
+		s.way_back()
+		self.assertIn(hand, s.custom)
+		self.assertEqual(sorted(s.level0()), sorted(before0 + [("Item Manager", 1, 1)]))
+		self.assertEqual(s.level1(), [])
 
 
 if __name__ == "__main__":
