@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TASKS-365 (round 9c):** the patch's lines (a row of a vanished role, a kept copy, an unreadable record) also go to a log file of their own, `logs/rnd_hold_flag.log` at the bench and under the site (stderr where the bench streams its logs); a record `rnd_hold_flag_docperms` that cannot be read (not JSON, `null`, a list) makes the patch and the way back say so plainly and change nothing, without failing the migrate; with the record deleted the way back says what it finds and what it cannot do; the "copy KEPT" line counts the rows added by hand, changed and deleted.
 - Tests: `tests/test_qc_hold_gate.py`, `tests/test_hold_flag_permlevel.py`.
 
+## [2.3.3] - 2026-11
+
+- `qi_automation.py` (TASKS-335 D-10): the Manufacture hook no longer raises 1054 after inserting the inspection (it writes `custom_work_order` only where the Quality Inspection has that field; no repository ships it), and both `frappe.log_error` calls pass `title=` / `message=` (the Error Log class had been the per-document message). New optional site-config key `rnd_auto_quality_inspection`: absent = automatic inspection on (unchanged), `0` = off. No migrate, no fixture; restart.
+- Not changed: the inspection still reads Rejected (ERPNext judges the empty readings); no neutral state exists in the Select.
+- The switch `rnd_auto_quality_inspection` is read with care (TASKS-365, S-1): the text `"0"` or `"false"` typed in quotes in `site_config.json` turns it off, as the number `0` and `false` do.
+- Tests: `tests/test_qi_automation_tasks335.py`.
+
 ## [2.3.2] - 2026-11
 
 - `hooks.py`: removed the include of `warehouse_temperature.js` — `app_include_js` (`/assets/rnd_warehouse_management/js/warehouse_temperature.js`) and the `Warehouse` entry of `doctype_js` (`public/js/warehouse_temperature.js`). The file is in no commit of this repository (added to the hooks by `d640059`, 2026-01-25, never committed), so every Desk page requested it and got a 404. No behaviour change: nothing was ever loaded from it. No fixture, patch, DocType, Python or JS change. Tests: `tests/test_hooks_includes.py`.

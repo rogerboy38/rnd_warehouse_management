@@ -5,10 +5,32 @@ Auto-creates Quality Inspection on Stock Entry (Manufacture) submission
 import frappe
 from frappe.utils import now_datetime, nowdate
 
+_OFF_WORDS = ("", "0", "false", "no", "off", "none", "null")
+
+
+def _switch_on(value):
+    """The site-config switch read with care (TASKS-365, VM3 S-1): a hand-edited `"0"` or `"false"` in quotes is OFF,
+    as the number 0 and `false` are. Any text that is a zero number (`"0.0"`, `" 0 "`) is off too; other text is on."""
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if text in _OFF_WORDS:
+            return False
+        try:
+            return float(text) != 0
+        except ValueError:
+            return True
+    return bool(value)
+
+
 def create_quality_inspection_on_manufacture(doc, method=None):
     """Auto-create Quality Inspection when a Manufacture Stock Entry is submitted"""
     # Only trigger for Manufacture purpose
     if doc.purpose != "Manufacture" and doc.stock_entry_type != "Manufacture":
+        return
+
+    # Switch (TASKS-335 D-10): site_config key `rnd_auto_quality_inspection`; absent = on (unchanged),
+    # 0/false = no automatic inspection. No migrate, no DocType; a bench/site-config edit + restart.
+    if not _switch_on(frappe.conf.get("rnd_auto_quality_inspection", 1)):
         return
     
     # Get finished goods items from the stock entry
@@ -58,7 +80,9 @@ def create_quality_inspection_on_manufacture(doc, method=None):
             qi.insert(ignore_permissions=True)
             
             # Link QI back to Work Order if exists
-            if doc.work_order:
+            # `custom_work_order` is not shipped by any app's fixtures (TASKS-335): write it only
+            # where a site has defined it, never raise 1054 after the inspection is already inserted.
+            if doc.work_order and frappe.get_meta("Quality Inspection").has_field("custom_work_order"):
                 qi.db_set("custom_work_order", doc.work_order)
             
             frappe.msgprint(
@@ -68,9 +92,10 @@ def create_quality_inspection_on_manufacture(doc, method=None):
             )
             
         except Exception as e:
+            # frappe.log_error(title, message): the class is the title, the detail is the message
             frappe.log_error(
-                f"Failed to create QI for SE {doc.name}, Item {item.item_code}: {str(e)}",
-                "QI Auto-Creation Error"
+                title="QI Auto-Creation Error",
+                message=f"Failed to create QI for SE {doc.name}, Item {item.item_code}: {str(e)}",
             )
 
 
@@ -112,6 +137,6 @@ def create_non_conformity_on_qi_failure(doc, method=None):
         
     except Exception as e:
         frappe.log_error(
-            f"Failed to create NC for QI {doc.name}: {str(e)}",
-            "NC Auto-Creation Error"
+            title="NC Auto-Creation Error",
+            message=f"Failed to create NC for QI {doc.name}: {str(e)}",
         )
