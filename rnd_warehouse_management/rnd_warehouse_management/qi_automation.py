@@ -5,6 +5,23 @@ Auto-creates Quality Inspection on Stock Entry (Manufacture) submission
 import frappe
 from frappe.utils import now_datetime, nowdate
 
+_OFF_WORDS = ("", "0", "false", "no", "off", "none", "null")
+
+
+def _switch_on(value):
+    """The site-config switch read with care (TASKS-365, VM3 S-1): a hand-edited `"0"` or `"false"` in quotes is OFF,
+    as the number 0 and `false` are. Any text that is a zero number (`"0.0"`, `" 0 "`) is off too; other text is on."""
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if text in _OFF_WORDS:
+            return False
+        try:
+            return float(text) != 0
+        except ValueError:
+            return True
+    return bool(value)
+
+
 def create_quality_inspection_on_manufacture(doc, method=None):
     """Auto-create Quality Inspection when a Manufacture Stock Entry is submitted"""
     # Only trigger for Manufacture purpose
@@ -13,7 +30,7 @@ def create_quality_inspection_on_manufacture(doc, method=None):
 
     # Switch (TASKS-335 D-10): site_config key `rnd_auto_quality_inspection`; absent = on (unchanged),
     # 0/false = no automatic inspection. No migrate, no DocType; a bench/site-config edit + restart.
-    if not frappe.conf.get("rnd_auto_quality_inspection", 1):
+    if not _switch_on(frappe.conf.get("rnd_auto_quality_inspection", 1)):
         return
     
     # Get finished goods items from the stock entry

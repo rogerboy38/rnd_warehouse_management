@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `qi_automation.py` (TASKS-335 D-10): the Manufacture hook no longer raises 1054 after inserting the inspection (it writes `custom_work_order` only where the Quality Inspection has that field; no repository ships it), and both `frappe.log_error` calls pass `title=` / `message=` (the Error Log class had been the per-document message). New optional site-config key `rnd_auto_quality_inspection`: absent = automatic inspection on (unchanged), `0` = off. No migrate, no fixture; restart.
 - Not changed: the inspection still reads Rejected (ERPNext judges the empty readings); no neutral state exists in the Select.
+- The switch `rnd_auto_quality_inspection` is read with care (TASKS-365, S-1): the text `"0"` or `"false"` typed in quotes in `site_config.json` turns it off, as the number `0` and `false` do.
 - Tests: `tests/test_qi_automation_tasks335.py`.
 
 ## [2.3.2] - 2026-11
