@@ -70,10 +70,15 @@ def execute():
 	state = {"base_copied": False, "added": [], "upgraded": []}
 	prior = frappe.db.get_default(STATE_KEY)
 	if prior:
-		try:
-			state = json.loads(prior)
-		except Exception:
-			pass
+		state, wrong = _read_record(prior)
+		if wrong:
+			# TASKS-365 R-1: a record damaged by hand. Nothing is changed and the migrate goes on (no exception).
+			_say(
+				f"the record `{STATE_KEY}` (a site default) cannot be read: {wrong}. The patch changed NOTHING: no "
+				"level-1 row was made and the record is left as it is. Repair the record or delete it, then run "
+				f"`bench --site <site> run-patch {PATCH_NAME} --force`"
+			)
+			return
 	if setup_custom_perms(DOCTYPE):
 		# the standard rows were copied unchanged. The copy is recorded row by row, so that the way back can tell the
 		# patch's rows from rows a person adds later (TASKS-361 P-A)
@@ -97,11 +102,38 @@ def execute():
 	frappe.clear_cache(doctype=DOCTYPE)
 
 
+LOG_NAME = "rnd_hold_flag"
+
+
 def _say(text):
-	"""One line in the migrate output and in the site's log."""
+	"""One line in the migrate output AND in a log file (TASKS-365 L-1). Frappe's default logger drops a warning (its
+	level is ERROR), so the line goes to a logger of its own, at WARNING: `<bench>/logs/rnd_hold_flag.log` and
+	`<bench>/sites/<site>/logs/rnd_hold_flag.log`. Where the bench streams its logs (FRAPPE_STREAM_LOGGING, as a
+	container stack does) the same line goes to the process's stderr instead of the two files."""
+	import logging
+
 	line = f"hold_flag_permlevel: {text}"
 	print(line)
-	frappe.logger().warning(line)
+	logger = frappe.logger(LOG_NAME)
+	logger.setLevel(logging.WARNING)
+	logger.warning(line)
+
+
+def _read_record(raw):
+	"""(record, None) when `raw` is the JSON object the patch writes, else (None, what is wrong), in plain words."""
+	try:
+		rec = json.loads(raw)
+	except Exception:
+		return None, "its text is not JSON"
+	if not isinstance(rec, dict):
+		return None, f"it holds `{json.dumps(rec)[:40]}`, not the object the patch writes"
+	for key in ("added", "upgraded"):
+		if not isinstance(rec.setdefault(key, []), list):
+			return None, f"its `{key}` is not a list"
+	if rec.get("copied") is not None and not isinstance(rec["copied"], list):
+		return None, "its `copied` is not a list"
+	rec.setdefault("base_copied", False)
+	return rec, None
 
 
 def _existing_roles_only(rows):
@@ -119,6 +151,23 @@ def _existing_roles_only(rows):
 
 
 PERM_FLAGS = ("read", "write", "create", "delete", "submit", "cancel", "amend", "report", "export", "import", "share", "print", "email", "select")
+
+
+def _sig(r):
+	return (r["role"], cint(r.get("permlevel")), cint(r.get("if_owner")), tuple(cint(r.get(k)) for k in PERM_FLAGS))
+
+
+def _against_standard(names):
+	"""(custom rows of `names` that equal no standard row, standard rows that no such custom row equals): what a person
+	changed or added, and what is missing, counted row for row (TASKS-365 W-1)."""
+	fields = ["name", "role", "permlevel", "if_owner", *PERM_FLAGS]
+	custom = [_sig(r) for r in frappe.get_all("Custom DocPerm", filters={"parent": DOCTYPE, "name": ["in", names or ["-"]]}, fields=fields)]
+	standard = [_sig(r) for r in frappe.get_all("DocPerm", filters={"parent": DOCTYPE}, fields=fields)]
+	for sig in list(custom):
+		if sig in standard:
+			standard.remove(sig)
+			custom.remove(sig)
+	return len(custom), len(standard)
 
 
 def _is_plain_copy(names):
@@ -142,8 +191,17 @@ def rollback():
 	raw = frappe.db.get_default(STATE_KEY)
 	if not raw:
 		_forget_patch()     # nothing of ours on the site; make sure a later migrate of this code runs the patch
-		return "nothing recorded: nothing removed"
-	state = json.loads(raw)
+		return _nothing_recorded()
+	state, wrong = _read_record(raw)
+	if wrong:
+		# TASKS-365 R-1: said plainly, nothing changed, no exception (bench hid the cause behind a NameError)
+		note = (
+			f"the record `{STATE_KEY}` (a site default) cannot be read: {wrong}. The way back changed NOTHING: no row "
+			"removed, the field's level and the Patch Log as they were. Repair the record and run the way back again; "
+			"or delete the record, after which the way back can no longer tell the patch's rows from a person's"
+		)
+		_say(note)
+		return note
 	for name in state.get("added", []):
 		if frappe.db.exists("Custom DocPerm", name):
 			frappe.delete_doc("Custom DocPerm", name, ignore_permissions=True, force=True)
@@ -156,12 +214,21 @@ def rollback():
 		copied = state.get("copied")
 		ours = [n for n in left if n in copied] if copied is not None else left      # a record of an older patch has no list
 		by_hand = [n for n in left if n not in ours]
-		if not by_hand and _is_plain_copy(ours):
+		if not left:
+			copy_note = "copy: no Custom DocPerm row of Warehouse is left on the site (removed by hand since); nothing to remove, the site is on the standard rows"
+			_say(copy_note)
+		elif not by_hand and _is_plain_copy(ours):
 			for name in ours:
 				frappe.delete_doc("Custom DocPerm", name, ignore_permissions=True, force=True)
 			copy_note = f"copy removed: {len(ours)} rows"
 		else:
-			copy_note = f"copy KEPT: {len(by_hand)} row(s) added by hand or a copied row changed since; they stand on the copy"
+			# TASKS-365 W-1: the count says what was found, in each case
+			not_standard, missing = _against_standard(ours)
+			if copied is not None:
+				found = f"{len(by_hand)} row(s) added by hand, {not_standard} copied row(s) changed, {len(copied) - len(ours)} copied row(s) deleted since"
+			else:   # a record of the older patch: no list of the copied rows, so the rows are told apart by comparison only
+				found = f"{not_standard} row(s) that equal no standard row (added or changed by hand), {missing} standard row(s) with no equal row left"
+			copy_note = f"copy KEPT ({len(left)} rows left as they are): {found}; a person's rows stand on the copy"
 			_say(copy_note)
 	if frappe.db.exists("Custom Field", f"{DOCTYPE}-{FIELD}"):
 		frappe.db.set_value("Custom Field", f"{DOCTYPE}-{FIELD}", "permlevel", 0)
@@ -171,6 +238,24 @@ def rollback():
 	_forget_patch()
 	frappe.clear_cache(doctype=DOCTYPE)
 	return f"removed {len(state.get('added', []))} level-1 rows, undid {len(state.get('upgraded', []))} upgrades, {copy_note}"
+
+
+def _nothing_recorded():
+	"""TASKS-365 R-1: no record on the site (the patch never ran, the way back already ran, or the record was deleted
+	by hand). The way back says what it finds and what it can and cannot do without the record."""
+	level1 = frappe.get_all("Custom DocPerm", filters={"parent": DOCTYPE, "permlevel": 1}, pluck="name")
+	level = cint(frappe.db.get_value("Custom Field", f"{DOCTYPE}-{FIELD}", "permlevel")) if frappe.db.exists("Custom Field", f"{DOCTYPE}-{FIELD}") else 0
+	note = "nothing recorded: nothing removed"
+	if level1 or level:
+		note += (
+			f". Found on the site: the field at level {level}, {len(level1)} level-1 Custom DocPerm row(s) of {DOCTYPE}. "
+			f"Without the record `{STATE_KEY}` the way back cannot tell the patch's rows from a person's, so it removes "
+			"no row and leaves the field's level. It did one thing: the patch is forgotten, so the next migrate of this "
+			"code runs it again and writes a new record (rows that exist are not duplicated). To go back by hand: delete "
+			"the level-1 rows in Role Permission Manager"
+		)
+		_say(note)
+	return note
 
 
 def _forget_patch():

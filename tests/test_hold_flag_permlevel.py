@@ -165,6 +165,8 @@ class FakeSite:
 			site.defaults_cache = dict(site.defaults)       # frappe.defaults.clear_default drops it too
 
 		f.logger.return_value.warning.side_effect = site.log.append
+		f.db.get_value.side_effect = lambda dt, name, field: site.field_level
+		site.last_frappe = f
 		f.db.exists.side_effect = exists
 		f.get_all.side_effect = get_all
 		f.new_doc.side_effect = new_doc
@@ -366,3 +368,105 @@ class TestRound9a(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main()
+
+
+class TestRound9c(unittest.TestCase):
+	"""TASKS-365: L-1 (the line reaches a log file), R-1 (a damaged or missing record), W-1 (the count of the kept copy)."""
+
+	def damage(self, s, text):
+		s.defaults[P.STATE_KEY] = text
+		s.defaults_cache = dict(s.defaults)
+
+	def test_l1_the_line_goes_to_a_logger_of_its_own_at_warning_level(self):
+		import logging
+
+		s = FakeSite([dict(role="Stock User", permlevel=0, read=1, write=0, if_owner=0), dict(role="Borrado", permlevel=0, read=1, write=0, if_owner=0)])
+		s.migrate()
+		f = s.last_frappe
+		f.logger.assert_called_with(P.LOG_NAME)
+		f.logger.return_value.setLevel.assert_called_with(logging.WARNING)
+		self.assertTrue(any("Borrado" in line for line in s.log))
+		self.assertEqual(P.LOG_NAME, "rnd_hold_flag")
+
+	def test_r1_a_record_that_cannot_be_read_stops_the_way_back_plainly_and_changes_nothing(self):
+		for text, word in (("not json {", "not JSON"), ("null", "null"), ("[]", "[]"), ('"text"', "text"), ('{"added": 5}', "`added` is not a list"), ('{"copied": "x"}', "`copied` is not a list")):
+			s = FakeSite()
+			s.migrate()
+			rows, log = dict(s.custom), set(s.patch_log)
+			self.damage(s, text)
+			out = s.way_back()                                # no exception
+			self.assertIn("cannot be read", out, text)
+			self.assertIn(word, out, text)
+			self.assertIn("changed NOTHING", out)
+			self.assertEqual((s.custom, s.patch_log, s.field_level, s.defaults[P.STATE_KEY]), (rows, log, 1, text), text)
+			self.assertTrue(any("cannot be read" in line for line in s.log))
+
+	def test_r1_a_record_that_cannot_be_read_does_not_fail_the_migrate_and_the_patch_changes_nothing(self):
+		for text in ("null", "[]", "not json {", '{"added": 5}'):
+			s = FakeSite()
+			s.migrate()
+			rows = dict(s.custom)
+			self.damage(s, text)
+			s.patch_log.clear()                               # the patch has to run again
+			s.migrate()                                       # no exception: the migrate goes on
+			self.assertEqual((s.custom, s.defaults[P.STATE_KEY]), (rows, text), text)
+			self.assertTrue(any("changed NOTHING" in line and "run-patch" in line for line in s.log), text)
+
+	def test_r1_a_record_with_keys_missing_is_still_a_record(self):
+		s = FakeSite()
+		s.migrate()
+		rec = json.loads(s.defaults[P.STATE_KEY]); rec.pop("upgraded"); self.damage(s, json.dumps(rec))
+		self.assertIn("copy removed", s.way_back())
+		self.assertEqual(s.custom, {})
+
+	def test_r1_a_deleted_record_the_way_back_says_what_it_finds_and_what_it_cannot_do(self):
+		s = FakeSite()
+		s.migrate()
+		rows = dict(s.custom)
+		s.defaults.pop(P.STATE_KEY); s.defaults_cache = {}
+		out = s.way_back()
+		self.assertEqual((s.custom, s.field_level), (rows, 1))                # nothing removed, the level left
+		self.assertIn("nothing recorded: nothing removed", out)
+		self.assertIn("the field at level 1, 4 level-1 Custom DocPerm row(s)", out)
+		self.assertIn("cannot tell the patch's rows from a person's", out)
+		self.assertNotIn(P.PATCH_NAME, s.patch_log)                           # the one thing it does
+		s.migrate()                                                           # the next migrate writes a new record
+		self.assertEqual(len(s.custom), len(rows))                            # and duplicates no row
+		self.assertIn(P.STATE_KEY, s.defaults)
+
+	def test_r1_nothing_recorded_on_a_clean_site_stays_one_short_line(self):
+		s = FakeSite()
+		self.assertEqual(s.way_back(), "nothing recorded: nothing removed")
+		s.migrate(); s.way_back()
+		self.assertEqual(s.way_back(), "nothing recorded: nothing removed")
+
+	def test_w1_the_count_of_the_kept_copy_is_right_in_each_case(self):
+		hand = dict(role="Planeacion", permlevel=0, read=1, write=0, if_owner=0)
+
+		def site(old_record=False):
+			s = FakeSite(); s.migrate()
+			if old_record:
+				rec = json.loads(s.defaults[P.STATE_KEY]); rec.pop("copied"); self.damage(s, json.dumps(rec))
+			return s
+
+		def copied_row(s):
+			return next(n for n, r in s.custom.items() if r["role"] == "Stock User" and r["permlevel"] == 0)
+
+		s = site(); s._add(dict(hand))
+		self.assertIn("copy KEPT (3 rows left as they are): 1 row(s) added by hand, 0 copied row(s) changed, 0 copied row(s) deleted", s.way_back())
+		s = site(); s.custom[copied_row(s)]["write"] = 1
+		self.assertIn("copy KEPT (2 rows left as they are): 0 row(s) added by hand, 1 copied row(s) changed, 0 copied row(s) deleted", s.way_back())
+		s = site(); s.custom.pop(copied_row(s))
+		self.assertIn("copy KEPT (1 rows left as they are): 0 row(s) added by hand, 0 copied row(s) changed, 1 copied row(s) deleted", s.way_back())
+		s = site(); s._add(dict(hand)); s.custom[copied_row(s)]["write"] = 1
+		self.assertIn("1 row(s) added by hand, 1 copied row(s) changed, 0 copied row(s) deleted", s.way_back())
+		s = site(); s.custom = {n: r for n, r in s.custom.items() if r["permlevel"] == 1}      # every copied row gone
+		out = s.way_back()
+		self.assertIn("no Custom DocPerm row of Warehouse is left", out)
+		self.assertNotIn("KEPT", out)
+		s = site(old_record=True); s._add(dict(hand))
+		self.assertIn("copy KEPT (3 rows left as they are): 1 row(s) that equal no standard row (added or changed by hand), 0 standard row(s) with no equal row left", s.way_back())
+		s = site(old_record=True); s.custom[copied_row(s)]["write"] = 1
+		self.assertIn("1 row(s) that equal no standard row (added or changed by hand), 1 standard row(s) with no equal row left", s.way_back())
+		s = site(old_record=True)
+		self.assertIn("copy removed: 2 rows", s.way_back())
