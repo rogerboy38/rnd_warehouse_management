@@ -5,6 +5,11 @@ All notable changes to the RND Warehouse Management app will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- **Work Order form: "Certificate" (TASKS-384 B2).** A saved Work Order shows Create > Certificate. The certificate belongs to the lot record (Batch AMB), so the button works through it: it looks for the lot records whose `work_order_ref` is this order; none: a message that a lot record is needed first; one: that lot; several: the user chooses. It then calls `amb_w_tds.api.certificate.make_certificate_for_lot` (the certificates app decides the type and fills the certificate on the server) and opens the returned document. Containers (level 3 and below) are not offered. A refusal is the server's own message. Form script only (`public/js/work_order.js`): no Python, fixture, patch or migrate; needs `bench build` / assets and the `amb_w_tds` function of the same task. No version change in this branch.
+- Tests: `tests/test_work_order_certificate.py`.
+
 ## [2.4.0] - 2026-11
 
 - **QC hold gate (TASKS-337 item 6, decision 59; TASKS-342):** a Stock Entry that takes a lot out of a warehouse flagged `custom_qc_hold` is refused at submit (first line `before_validate`, which Frappe runs even under `ignore_validate`; second line `on_submit`), and so is the CANCEL of a Stock Entry that put a lot into one (`before_cancel`; `on_cancel` when validation was skipped), unless that lot's Batch AMB `quality_status` is Passed. Flagging a GROUP warehouse is refused (the gate does not follow children: flag each leaf). A lot with no Batch AMB link, or a batch-tracked row naming no lot, is refused; transfers between two flagged warehouses, returns into one, receipts and finished-item rows are not judged. Override: role `QC Hold Override`, each override leaves one Info Comment on the Stock Entry with the user, the action and, per lot, its status, quantity and warehouse.
