@@ -43,16 +43,52 @@ class Doc(dict):
 		self.add_comment = mock.MagicMock()
 
 
-def fake_frappe(hold=("QC",), amb_of=None, status_of=None, has_wh_field=True, has_batch_field=True,
-		bundles=None, roles=("Stock User",), amb_doctype=True, batch_items=("IT",)):
-	"""amb_of: batch -> Batch AMB name; status_of: Batch AMB name -> quality_status; bundles: bundle -> [(batch, qty)]."""
+def fake_frappe(
+	hold=("QC",),
+	amb_of=None,
+	status_of=None,
+	has_wh_field=True,
+	has_batch_field=True,
+	bundles=None,
+	roles=("Stock User",),
+	amb_doctype=True,
+	batch_items=("IT",),
+	source_of=None,
+	parent_of=None,
+	amb_fields=("status_source", "parent_batch_amb"),
+):
+	"""amb_of: batch -> Batch AMB name; status_of: Batch AMB name -> quality_status; bundles: bundle -> [(batch, qty)];
+	source_of / parent_of: Batch AMB name -> status_source / parent_batch_amb (TASKS-387); amb_fields: which of those
+	two fields the site's Batch AMB has. A Batch AMB record exists when it is named in status_of, source_of or
+	parent_of."""
 	amb_of, status_of, bundles = amb_of or {}, status_of or {}, bundles or {}
+	source_of, parent_of = source_of or {}, parent_of or {}
 	f = mock.MagicMock()
 
 	def get_meta(dt):
 		m = mock.MagicMock()
-		m.has_field.side_effect = lambda fn: (has_wh_field if dt == "Warehouse" else has_batch_field)
+		if dt == "Batch AMB":
+			m.has_field.side_effect = lambda fn: fn in amb_fields
+		else:
+			m.has_field.side_effect = lambda fn: (has_wh_field if dt == "Warehouse" else has_batch_field)
 		return m
+
+	def amb_row(name, field, as_dict):
+		if name not in status_of and name not in source_of and name not in parent_of:
+			return None
+		full = {
+			"quality_status": status_of.get(name),
+			"status_source": source_of.get(name),
+			"parent_batch_amb": parent_of.get(name),
+		}
+		if isinstance(field, (list, tuple)):
+			assert as_dict, "the gate reads a list of fields as a dict"
+			for fn in field:
+				assert (
+					fn == "quality_status" or fn in amb_fields
+				), f"read of {fn}, which this site does not have"
+			return {fn: full[fn] for fn in field}
+		return full[field]
 
 	def get_value(dt, name, field=None, *a, **k):
 		if dt == "Warehouse":
@@ -62,8 +98,10 @@ def fake_frappe(hold=("QC",), amb_of=None, status_of=None, has_wh_field=True, ha
 		if dt == "Batch":
 			return amb_of.get(name)
 		if dt == "Batch AMB":
-			return status_of.get(name)
+			f.amb_reads.append(name)
+			return amb_row(name, field, k.get("as_dict"))
 
+	f.amb_reads = []
 	f.get_meta.side_effect = get_meta
 	f.db.get_value.side_effect = get_value
 	f.db.exists.return_value = amb_doctype
@@ -285,6 +323,137 @@ class TestOverrideRecord(GateCase):
 		d = Doc([row("QC", "FG", "B1")])
 		self.refused(d, **self.LOT, status_of={"A1": "Failed"})
 		d.add_comment.assert_not_called()
+
+
+class TestHoldAbove(GateCase):
+	"""TASKS-387 item 3.1 (decision 323): the gate walks up `parent_batch_amb` from the record the stock's Batch links
+	(level 2 here, `S`; its container `C`; the lot `L`) and refuses when any record on the way has status_source
+	"Hold action", naming the held record. The records below keep their own status: the lot app does not write them."""
+
+	def tree(self, held=(), status=None, parent=None, **kw):
+		status_of = {"L": "Passed", "S": "Passed", "C": "Passed"}
+		status_of.update(status or {})
+		parent_of = {"S": "L", "C": "S"}
+		parent_of.update(parent or {})
+		source_of = {n: "Hold action" for n in held}
+		return dict(
+			amb_of={"B1": "S", "B2": "C"},
+			status_of=status_of,
+			parent_of=parent_of,
+			source_of=source_of,
+			**kw,
+		)
+
+	def test_a_held_lot_with_a_passed_sub_lot_is_refused_naming_the_lot(self):
+		f = self.refused(Doc([row("QC", "FG", "B1")]), **self.tree(held=("L",), status={"L": "Hold"}))
+		msg = f.throw.call_args.args[0]
+		self.assertIn("B1 (QC)", msg)
+		self.assertIn("lot record L above its lot record S is on a hold (Hold action)", msg)
+		self.assertIn("no lot record above it is on a hold", msg)
+		self.leaves(
+			Doc([row("QC", "FG", "B1")]), **self.tree(status={"L": "Hold"})
+		)  # the same tree, L not held
+
+	def test_a_held_sub_lots_container_is_refused_naming_the_sub_lot(self):
+		f = self.refused(Doc([row("QC", "FG", "B2")]), **self.tree(held=("S",), status={"S": "Hold"}))
+		self.assertIn("lot record S above its lot record C", f.throw.call_args.args[0])
+		self.leaves(Doc([row("QC", "FG", "B2")]), **self.tree())
+
+	def test_the_linked_record_on_a_hold_is_named_as_such(self):
+		f = self.refused(Doc([row("QC", "FG", "B1")]), **self.tree(held=("S",), status={"S": "Hold"}))
+		self.assertIn("its lot record S is on a hold (Hold action)", f.throw.call_args.args[0])
+		# a hold is a hold whatever the status column says (the source is what the gate reads)
+		self.refused(Doc([row("QC", "FG", "B1")]), **self.tree(held=("S",)))
+
+	def test_an_unheld_tree_passes_and_an_ancestor_not_passed_but_not_held_does_not_block(
+		self,
+	):
+		v = self.leaves(Doc([row("QC", "FG", "B1"), row("QC", "FG", "B2")]), **self.tree())
+		self.assertEqual(v["action"], "submit")
+		self.leaves(
+			Doc([row("QC", "FG", "B2")]),
+			**self.tree(status={"L": "Failed", "S": "Pending"}),
+		)
+		# the linked record itself must still be Passed (as before)
+		self.refused(Doc([row("QC", "FG", "B2")]), **self.tree(status={"C": "Pending"}))
+
+	def test_a_loop_ends_each_record_read_once(self):
+		v, refused, f = self.gate(Doc([row("QC", "FG", "B1")]), **self.tree(parent={"L": "S"}))
+		self.assertFalse(refused)
+		self.assertEqual(v["refused"], [])
+		self.assertEqual(sorted(f.amb_reads), ["L", "S"])
+		# a loop with a hold on it is still refused
+		self.refused(Doc([row("QC", "FG", "B2")]), **self.tree(held=("L",), parent={"L": "C"}))
+
+	def test_one_read_per_level_cached_per_entry(self):
+		_v, _r, f = self.gate(Doc([row("QC", "FG", "B1"), row("QC", "FG", "B2")]), **self.tree())
+		self.assertEqual(sorted(f.amb_reads), ["C", "L", "S"])
+
+	def test_a_parent_that_does_not_exist_refuses_the_lot_naming_it(self):
+		t = self.tree(parent={"S": "GONE"})
+		f = self.refused(Doc([row("QC", "FG", "B1")]), **t)
+		self.assertIn(
+			"lot record GONE above its lot record S does not exist",
+			f.throw.call_args.args[0],
+		)
+
+	def test_the_override_still_passes_a_held_lot_and_records_the_held_record(self):
+		d = Doc([row("QC", "FG", "B1", qty=4)])
+		kw = self.tree(held=("L",), roles=("Stock User", g.OVERRIDE_ROLE))
+		v, refused, _f = self.gate(d, "on_submit", **kw)
+		self.assertFalse(refused)
+		self.assertTrue(v["overridden"])
+		self.assertIn(
+			"B1 (status Hold action on L, qty 4.0, from QC)",
+			d.add_comment.call_args.args[1],
+		)
+		self.refused(
+			Doc([row("QC", "FG", "B1")]), **self.tree(held=("L",))
+		)  # the same entry without the role
+
+	def test_administrator_holds_every_role_so_it_passes_as_with_the_override(self):
+		roles = ("Administrator", "System Manager", "Stock User", g.OVERRIDE_ROLE)
+		v, refused, _f = self.gate(
+			Doc([row("QC", "FG", "B1")]),
+			"on_submit",
+			**self.tree(held=("L",), roles=roles),
+		)
+		self.assertFalse(refused)
+		self.assertTrue(v["overridden"])
+
+	def test_a_site_without_status_source_behaves_as_before(self):
+		# no status_source: no hand hold exists; the one record's quality_status is read (a single field), no walk
+		v, refused, f = self.gate(Doc([row("QC", "FG", "B1")]), **self.tree(held=("L", "S"), amb_fields=()))
+		self.assertFalse(refused)
+		self.assertEqual(f.amb_reads, ["S"])
+		self.refused(
+			Doc([row("QC", "FG", "B1")]),
+			**self.tree(status={"S": "Pending"}, amb_fields=()),
+		)
+
+	def test_a_site_without_parent_batch_amb_judges_the_linked_records_hold_only(self):
+		self.leaves(
+			Doc([row("QC", "FG", "B1")]),
+			**self.tree(held=("L",), amb_fields=("status_source",)),
+		)
+		self.refused(
+			Doc([row("QC", "FG", "B1")]),
+			**self.tree(held=("S",), amb_fields=("status_source",)),
+		)
+
+	def test_a_read_error_is_not_swallowed(self):
+		f = fake_frappe(**self.tree())
+		read = f.db.get_value.side_effect
+
+		def failing(dt, *a, **k):
+			if dt == "Batch AMB":
+				raise ValueError("db down")
+			return read(dt, *a, **k)
+
+		f.db.get_value.side_effect = failing
+		with mock.patch.object(g, "frappe", f), mock.patch.object(g, "_", lambda s: s):
+			with self.assertRaises(ValueError):
+				g.check_qc_hold_release(Doc([row("QC", "FG", "B1")]), "before_validate")
 
 
 class TestGroupWarehouse(unittest.TestCase):
