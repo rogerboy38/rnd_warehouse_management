@@ -13,6 +13,9 @@ meet the same check (a per-write `ignore_permissions` does not skip a doc event)
   * "Out of QC" = the row's source warehouse is a hold warehouse and its target is not (a move between two hold
     warehouses, a return into one, a receipt and a finished-item row stay allowed; a Manufacture row that CONSUMES
     from a hold warehouse is a row like any other).
+  * Hand hold above (TASKS-387 item 3.1, decision 323): the lot is refused too when its Batch AMB, or any record
+    above it on the `parent_batch_amb` chain, has `status_source` "Hold action"; the refusal names the held record.
+    The lot app leaves the records below a held record at their own status, so this gate is where that hold binds.
   * A lot with no Batch AMB link, or whose Batch AMB is not Passed, is refused (fail closed). A row of a
     batch-tracked item that names no lot (no batch_no, no bundle) is refused too: ERPNext would pick the lot
     itself while posting the ledger (Stock Settings "auto create bundle for outward"), after this hook. A row of an
@@ -40,6 +43,9 @@ from frappe.utils import cint
 HOLD_FIELD = "custom_qc_hold"
 BATCH_AMB_FIELD = "custom_batch_amb"
 PASSED = "Passed"
+SOURCE_FIELD = "status_source"
+PARENT_FIELD = "parent_batch_amb"
+HOLD_ACTION = "Hold action"  # amb_w_spc lot_quality.HOLD_ACTION (decision 315); read as a word, the app is not imported
 OVERRIDE_ROLE = "QC Hold Override"
 # Decision 94 (TASKS-349): only these roles may set or clear the hold flag of a Warehouse. `QC Hold Override` is NOT
 # one of them: it lets a person release lots through a Stock Entry (one record per release), it does not let them
@@ -77,8 +83,57 @@ def row_batches(row):
 	return list(by_batch.items())
 
 
-def batch_verdict(batch):
-	"""(ok, why, status) for one lot: its Batch AMB's quality_status must be Passed. `status` is what a record shows."""
+_FIELDS_KEY = ("Batch AMB", "fields")  # a tuple: never a record name
+
+
+def _amb_fields(cache):
+	"""(has status_source, has parent_batch_amb) of the site's Batch AMB, read once per call. A meta read that
+	fails is not caught."""
+	if _FIELDS_KEY not in cache:
+		meta = frappe.get_meta("Batch AMB")
+		cache[_FIELDS_KEY] = (bool(meta.has_field(SOURCE_FIELD)), bool(meta.has_field(PARENT_FIELD)))
+	return cache[_FIELDS_KEY]
+
+
+def _amb_row(name, fields, cache):
+	"""One read of one Batch AMB record (`fields`), cached per call; None when the record does not exist."""
+	if name not in cache:
+		cache[name] = frappe.db.get_value("Batch AMB", name, list(fields), as_dict=True)
+	return cache[name]
+
+
+def walk_up(amb, cache):
+	"""(rows, held, missing) for the way from `amb` up `parent_batch_amb`, `amb` included.
+
+	TASKS-387 item 3.1 (decision 323): a hand hold ("Hold action") on a record holds the stock of every record below
+	it. The lot app keeps the records below at their own status (reading 1), so this gate is the one place where the
+	hold of a record above is enforced. One read per level (quality_status, status_source, parent_batch_amb), cached
+	per call. The walk ends at the first held record (`held`), at a record without a parent, at a record already seen
+	(a loop: every record on it has been read and judged) or at a record that does not exist (`missing`: the lot is
+	refused, fail closed). `rows`: {name: row} of what was read."""
+	has_source, has_parent = _amb_fields(cache)
+	fields = ("quality_status", SOURCE_FIELD) + ((PARENT_FIELD,) if has_parent else ())
+	rows, seen, name = {}, set(), amb
+	while name and name not in seen:
+		seen.add(name)
+		r = _amb_row(name, fields, cache)
+		if r is None:
+			return rows, None, name
+		rows[name] = r
+		if (r.get(SOURCE_FIELD) or "") == HOLD_ACTION:
+			return rows, name, None
+		name = r.get(PARENT_FIELD) if has_parent else None
+	return rows, None, None
+
+
+def batch_verdict(batch, cache=None):
+	"""(ok, why, status) for one lot: its Batch AMB's quality_status must be Passed, and (TASKS-387) no record from it
+	up the `parent_batch_amb` chain may be on a hand hold. `status` is what a record shows. `cache`: one per entry.
+
+	A site whose Batch AMB has no `status_source` has no hand hold: the gate reads the one record's quality_status
+	and judges as before (no walk). A site with `status_source` but no `parent_batch_amb` judges the one record's
+	hold and status. Read errors are not caught."""
+	cache = {} if cache is None else cache
 	if not frappe.get_meta("Batch").has_field(BATCH_AMB_FIELD):
 		return False, _("the Batch has no link to a Batch AMB on this site"), "no Batch AMB link field"
 	amb = frappe.db.get_value("Batch", batch, BATCH_AMB_FIELD)
@@ -86,7 +141,17 @@ def batch_verdict(batch):
 		return False, _("no Batch AMB is linked"), "no Batch AMB"
 	if not frappe.db.exists("DocType", "Batch AMB"):
 		return False, _("Batch AMB is not installed"), "Batch AMB not installed"
-	status = frappe.db.get_value("Batch AMB", amb, "quality_status") or ""
+	if not _amb_fields(cache)[0]:
+		status = frappe.db.get_value("Batch AMB", amb, "quality_status") or ""
+	else:
+		rows, held, missing = walk_up(amb, cache)
+		if held == amb:
+			return False, _("its lot record {0} is on a hold (Hold action)").format(held), f"Hold action on {held}"
+		if held:
+			return False, _("the lot record {0} above its lot record {1} is on a hold (Hold action)").format(held, amb), f"Hold action on {held}"
+		if missing and missing != amb:
+			return False, _("the lot record {0} above its lot record {1} does not exist").format(missing, amb), f"{missing} not found"
+		status = ((rows.get(amb) or {}).get("quality_status")) or ""
 	if status == PASSED:
 		return True, "", status
 	return False, _("quality status is {0}").format(status or _("empty")), status or "empty"
@@ -153,7 +218,7 @@ def refusals(doc, reverse=False):
 	Passed (`reverse`: as a cancel would). A submit is judged on the rows as validate_warehouse will leave them."""
 	if not frappe.get_meta("Warehouse").has_field(HOLD_FIELD):
 		return []
-	cache, out, seen = {}, [], {}
+	cache, amb_cache, out, seen = {}, {}, [], {}
 	for row in (doc.get("items") or []) if reverse else effective_rows(doc):
 		if not row_leaves_hold(row, cache, reverse):
 			continue
@@ -172,7 +237,7 @@ def refusals(doc, reverse=False):
 					b, w, why, st, q = out[i]
 					out[i] = (b, w, why, st, q + qty)
 				continue
-			ok, why, status = batch_verdict(batch)
+			ok, why, status = batch_verdict(batch, amb_cache)
 			seen[key] = None
 			if not ok:
 				seen[key] = len(out)
@@ -228,9 +293,9 @@ def check_qc_hold_release(doc, method=None):
 		result["overridden"] = True
 		return result
 	if action == "cancel":
-		msg = _("Cancelling this entry would take lots out of a QC hold warehouse; they can leave it only when their Batch AMB quality status is Passed:")
+		msg = _("Cancelling this entry would take lots out of a QC hold warehouse; they can leave it only when their Batch AMB quality status is Passed and no lot record above it is on a hold:")
 	else:
-		msg = _("Lots in a QC hold warehouse can leave it only when their Batch AMB quality status is Passed:")
+		msg = _("Lots in a QC hold warehouse can leave it only when their Batch AMB quality status is Passed and no lot record above it is on a hold:")
 	frappe.throw(msg + "\n" + lines, title=_("QC hold"))
 
 
